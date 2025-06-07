@@ -101,13 +101,14 @@ export default function Biblia() {
             {livroSelecionado.name} - Capítulo {capituloAtual + 1}
           </Text>
         </View>
-        <ScrollView style={styles.capituloContainer}>
-          {versiculos.map((versiculo, index) => (
-            <Text key={index} style={styles.versiculo}>
-              {index + 1}. {versiculo}
-            </Text>
-          ))}
-        </ScrollView>
+<ScrollView style={styles.capituloContainer}>
+  {versiculos.map((versiculo, index) => (
+    <Text key={index} style={styles.versiculo}>
+      {index + 1}. {versiculo}
+    </Text>
+  ))}
+  <View style={{ height: 40 }} /> 
+</ScrollView>
         <View style={styles.botoesContainer}>
           <Button
             title="Capítulo Anterior"
