@@ -35,6 +35,9 @@ const handleFuncionalidade = (nome: string) => {
     } else if (nome === 'Anotações') {
       router.push('/screens/anotacoes/anotacoes');
 
+    } else if (nome === 'Celebração da Palavra') {
+      router.push('/screens/celebracao');
+
     } else {
       const mensagem = `Você selecionou: ${nome}`;
       Platform.OS === 'web'
