@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { TextInput } from 'react-native';
 import {
   Platform,
   View,
@@ -26,6 +27,7 @@ const STORAGE_KEY = 'anotacoes';
 
 export default function Anotacoes() {
   const [anotacoes, setAnotacoes] = useState<Anotacao[]>([]);
+  const [busca, setBusca] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -111,38 +113,51 @@ export default function Anotacoes() {
 
   return (
     <View style={styles.container}>
-<Header/>
+      <Header />
       <View style={styles.header}>
         <Text style={styles.subtitle}>Minhas Anotações</Text>
         <Button title="Home" onPress={() => router.push('/')} />
       </View>
 
+      <TextInput
+        style={styles.inputBusca}
+        placeholder="Buscar por título..."
+        placeholderTextColor="#888"
+        value={busca}
+        onChangeText={setBusca}
+      />
+
       <ScrollView style={styles.scrollArea}>
         {anotacoes.length === 0 ? (
           <Text style={styles.mensagem}>Lista de anotações vazia.</Text>
         ) : (
-          anotacoes.map(anotacao => (
-            <View key={anotacao.id} style={styles.anotacaoContainer}>
-              <Text style={styles.anotacaoTitulo}>{anotacao.titulo}</Text>
-              <View style={styles.botoesContainer}>
-                <Button
-                  title="Visualizar"
-                  onPress={() => handleVisualizar(anotacao)}
-                  color="#1e90ff"
-                />
-                <Button
-                  title="Editar"
-                  onPress={() => handleEditar(anotacao.id)}
-                  color="#ffa500"
-                />
-                <Button
-                  title="Excluir"
-                  onPress={() => handleExcluir(anotacao.id)}
-                  color="#ff4d4d"
-                />
+          anotacoes
+            .filter(anotacao =>
+              anotacao.titulo.toLowerCase().includes(busca.toLowerCase())
+            )
+            .sort((a, b) => a.titulo.localeCompare(b.titulo))
+            .map(anotacao => (
+              <View key={anotacao.id} style={styles.anotacaoContainer}>
+                <Text style={styles.anotacaoTitulo}>{anotacao.titulo}</Text>
+                <View style={styles.botoesContainer}>
+                  <Button
+                    title="Visualizar"
+                    onPress={() => handleVisualizar(anotacao)}
+                    color="#1e90ff"
+                  />
+                  <Button
+                    title="Editar"
+                    onPress={() => handleEditar(anotacao.id)}
+                    color="#ffa500"
+                  />
+                  <Button
+                    title="Excluir"
+                    onPress={() => handleExcluir(anotacao.id)}
+                    color="#ff4d4d"
+                  />
+                </View>
               </View>
-            </View>
-          ))
+            ))
         )}
       </ScrollView>
 
@@ -213,5 +228,16 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderTopWidth: 1,
     borderColor: '#333', // borda do rodapé escura
+  },
+    inputBusca: {
+    backgroundColor: '#1E1E1E',
+    borderColor: '#555',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    color: '#fff',
+    marginBottom: 10,
+    fontSize: 16,
   },
 });

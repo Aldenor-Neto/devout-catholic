@@ -17,37 +17,40 @@ export default function Home() {
   const funcionalidades = [
     'Bíblia Sagrada',
     'Liturgia Diária',
-    'Liturgia Eucarística',
+    'Orações Eucarísticas',
     'Celebração da Palavra',
     'Santo do Dia',
     'Meditação',
     'Anotações',
   ];
 
-const handleFuncionalidade = (nome: string) => {
-  try {
-    if (nome === 'Bíblia Sagrada') {
-      router.push('/screens/biblia');
+  const handleFuncionalidade = (nome: string) => {
+    try {
+      if (nome === 'Bíblia Sagrada') {
+        router.push('/screens/biblia');
 
-    } else if (nome === 'Liturgia Diária') {
-      router.push('/screens/liturgia');
+      } else if (nome === 'Liturgia Diária') {
+        router.push('/screens/liturgia');
 
-    } else if (nome === 'Anotações') {
-      router.push('/screens/anotacoes/anotacoes');
+      } else if (nome === 'Anotações') {
+        router.push('/screens/anotacoes/anotacoes');
 
-    } else if (nome === 'Celebração da Palavra') {
-      router.push('/screens/celebracao');
+      } else if (nome === 'Celebração da Palavra') {
+        router.push('/screens/celebracao');
 
-    } else {
-      const mensagem = `Você selecionou: ${nome}`;
-      Platform.OS === 'web'
-        ? window.alert(mensagem)
-        : Alert.alert('Funcionalidade', mensagem);
+      } else if (nome === 'Orações Eucarísticas') {
+        router.push('/screens/oracoes-eucaristicas');
+
+      } else {
+        const mensagem = `Você selecionou: ${nome}`;
+        Platform.OS === 'web'
+          ? window.alert(mensagem)
+          : Alert.alert('Funcionalidade', mensagem);
+      }
+    } catch (error: any) {
+      Alert.alert('Erro', error.message || 'Erro inesperado');
     }
-  } catch (error: any) {
-    Alert.alert('Erro', error.message || 'Erro inesperado');
-  }
-};
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>

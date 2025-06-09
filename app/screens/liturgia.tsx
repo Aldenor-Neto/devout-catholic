@@ -3,6 +3,8 @@ import { Text, View, TouchableOpacity, StyleSheet, ActivityIndicator, ScrollView
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 
+import { generateReflection } from '../../app/util/gemini';
+
 import { Liturgia } from '../interface/liturgiaData';
 import Header from '../../components/header';
 
@@ -12,6 +14,9 @@ export default function LiturgiaScreen() {
   const [showOferendas, setShowOferendas] = useState<boolean | null>(null);
   const [showLeituras, setShowLeituras] = useState<boolean | null>(null);
   const [showAntifona, setShowAntifona] = useState<boolean | null>(null);
+
+  const [reflexoes, setReflexoes] = useState<{ [key: string]: string }>({});
+  const [gerandoReflexao, setGerandoReflexao] = useState<string | null>(null);
 
   const [showDatePickerModal, setShowDatePickerModal] = useState(false); // Controla a exibição do modal de data
   const [selectedDate, setSelectedDate] = useState(new Date()); // Data selecionada
@@ -75,6 +80,19 @@ export default function LiturgiaScreen() {
     showLeiturasSection();
   }, []);
 
+  const handleGerarReflexao = async (texto: string, id: string) => {
+    setGerandoReflexao(id);
+    try {
+      const reflexao = await generateReflection(texto);
+      setReflexoes((prev) => ({ ...prev, [id]: reflexao }));
+    } catch (error) {
+      console.error('Erro ao gerar reflexão:', error);
+      setReflexoes((prev) => ({ ...prev, [id]: 'Erro ao gerar reflexão.' }));
+    } finally {
+      setGerandoReflexao(null);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View>
@@ -130,10 +148,25 @@ export default function LiturgiaScreen() {
                 <Text style={styles.liturgiaDetails}>{liturgiaData.liturgia}</Text>
                 <Text style={styles.liturgiaDetails}>Cor: {liturgiaData.cor}</Text>
 
-                <Text style={styles.liturgiaTitle}>Primeira Leitura</Text>
-                <Text style={styles.liturgiaDetails}>{liturgiaData.primeiraLeitura.referencia}</Text>
-                <Text style={styles.liturgiaDetails}>{liturgiaData.primeiraLeitura.titulo}</Text>
-                <Text style={styles.liturgiaDetails}>{liturgiaData.primeiraLeitura.texto}</Text>
+<Text style={styles.liturgiaTitle}>Primeira Leitura</Text>
+<Text style={styles.liturgiaDetails}>{liturgiaData.primeiraLeitura.referencia}</Text>
+<Text style={styles.liturgiaDetails}>{liturgiaData.primeiraLeitura.titulo}</Text>
+<Text style={styles.liturgiaDetails}>{liturgiaData.primeiraLeitura.texto}</Text>
+
+<TouchableOpacity
+  style={styles.reflexaoButton}
+  onPress={() =>
+    handleGerarReflexao(liturgiaData.primeiraLeitura.texto, 'primeira')
+  }
+>
+  <Text style={styles.buttonText}>
+    {gerandoReflexao === 'primeira' ? 'Gerando...' : 'Reflexão'}
+  </Text>
+</TouchableOpacity>
+
+{reflexoes['primeira'] && (
+  <Text style={styles.liturgiaDetails}>{reflexoes['primeira']}</Text>
+)}
 
                 <Text style={styles.liturgiaTitle}>Salmo</Text>
                 <Text style={styles.liturgiaDetails}>{liturgiaData.salmo.referencia}</Text>
@@ -149,6 +182,27 @@ export default function LiturgiaScreen() {
                         <Text style={styles.liturgiaDetails}>{liturgiaData.segundaLeitura.referencia}</Text>
                         <Text style={styles.liturgiaDetails}>{liturgiaData.segundaLeitura.titulo}</Text>
                         <Text style={styles.liturgiaDetails}>{liturgiaData.segundaLeitura.texto}</Text>
+
+                        <TouchableOpacity
+  style={styles.reflexaoButton}
+  onPress={() =>
+    handleGerarReflexao(
+      typeof liturgiaData.segundaLeitura === 'object'
+        ? liturgiaData.segundaLeitura.texto
+        : liturgiaData.segundaLeitura,
+      'segunda'
+    )
+  }
+>
+  <Text style={styles.buttonText}>
+    {gerandoReflexao === 'segunda' ? 'Gerando...' : 'Reflexão'}
+  </Text>
+</TouchableOpacity>
+
+{reflexoes['segunda'] && (
+  <Text style={styles.liturgiaDetails}>{reflexoes['segunda']}</Text>
+)}
+
                       </>
                     ) : (
                       <Text style={styles.liturgiaDetails}>{liturgiaData.segundaLeitura}</Text>
@@ -156,10 +210,25 @@ export default function LiturgiaScreen() {
                   </>
                 )}
 
-                <Text style={styles.liturgiaTitle}>Evangelho</Text>
-                <Text style={styles.liturgiaDetails}>{liturgiaData.evangelho.referencia}</Text>
-                <Text style={styles.liturgiaDetails}>{liturgiaData.evangelho.titulo}</Text>
-                <Text style={styles.liturgiaDetails}>{liturgiaData.evangelho.texto}</Text>
+<Text style={styles.liturgiaTitle}>Evangelho</Text>
+<Text style={styles.liturgiaDetails}>{liturgiaData.evangelho.referencia}</Text>
+<Text style={styles.liturgiaDetails}>{liturgiaData.evangelho.titulo}</Text>
+<Text style={styles.liturgiaDetails}>{liturgiaData.evangelho.texto}</Text>
+
+<TouchableOpacity
+  style={styles.reflexaoButton}
+  onPress={() =>
+    handleGerarReflexao(liturgiaData.evangelho.texto, 'evangelho')
+  }
+>
+  <Text style={styles.buttonText}>
+    {gerandoReflexao === 'evangelho' ? 'Gerando...' : 'Reflexão'}
+  </Text>
+</TouchableOpacity>
+
+{reflexoes['evangelho'] && (
+  <Text style={styles.liturgiaDetails}>{reflexoes['evangelho']}</Text>
+)}
               </>
             )}
 
@@ -251,4 +320,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#fff',
   },
+  reflexaoButton: {
+  backgroundColor: '#228B22',
+  paddingVertical: 10,
+  paddingHorizontal: 20,
+  borderRadius: 20,
+  marginTop: 10,
+  alignItems: 'center',
+},
 });
