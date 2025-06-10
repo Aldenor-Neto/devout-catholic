@@ -54,15 +54,17 @@ export default function CelebracaoScreen() {
     <View style={styles.container}>
       <View>
         <Header />
-        <Button
-          title="Home"
-          onPress={() => {
-            router.push('/');
-          }}
-        />
+        <View style={styles.subHeaderButtons}>
+          <TouchableOpacity onPress={() => router.push({ pathname: '/' })} style={styles.headerButton}>
+            <Text style={styles.headerButtonText}>Home</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push({ pathname: '/screens/anotacoes/criarNota' })} style={styles.headerButton}>
+            <Text style={styles.headerButtonText}>Criar nota</Text>
+          </TouchableOpacity>
+        </View>
       </View>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <Text style={styles.title}>Primícias Sacerdotais</Text>
+        <Text style={styles.title}>Celebração da palavra</Text>
 
         <TouchableOpacity style={styles.dateButton} onPress={showDatePicker}>
           <Text style={styles.buttonText}>Escolher Data</Text>
@@ -289,15 +291,20 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   dateButton: {
-    backgroundColor: '#4f46e5',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 10,
+    borderColor: '#fff',
+    borderWidth: 2,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    marginVertical: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
   },
   buttonText: {
     color: '#fff',
-    fontSize: 16,
-    textAlign: 'center',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   dataContainer: {
     backgroundColor: '#1f2937',
@@ -352,4 +359,20 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'right',
   },
+    subHeaderButtons: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  headerButton: {
+    backgroundColor: '#333',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 5,
+    marginLeft: 10,
+  },
+  headerButtonText: {
+    color: '#fff',
+    fontSize: 14,
+  },
+
 }); 

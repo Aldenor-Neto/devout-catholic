@@ -119,6 +119,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    backgroundColor: '#121212', // mesmo fundo do container
   },
   toolbar: {
     flexDirection: 'row',
@@ -180,8 +181,8 @@ const styles = StyleSheet.create({
   linha: {
     color: '#e0e0e0',
     fontSize: 16,
-    marginBottom: 16, // De 8 para 16, para maior espaçamento
-    lineHeight: 24,
+    marginBottom: 6, // Reduzido
+    lineHeight: 20,  // Levemente reduzido
   },
   resposta: {
     color: '#bb86fc',

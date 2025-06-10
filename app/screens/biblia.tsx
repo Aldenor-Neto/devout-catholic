@@ -101,14 +101,14 @@ export default function Biblia() {
             {livroSelecionado.name} - Capítulo {capituloAtual + 1}
           </Text>
         </View>
-<ScrollView style={styles.capituloContainer}>
-  {versiculos.map((versiculo, index) => (
-    <Text key={index} style={styles.versiculo}>
-      {index + 1}. {versiculo}
-    </Text>
-  ))}
-  <View style={{ height: 40 }} /> 
-</ScrollView>
+        <ScrollView style={styles.capituloContainer}>
+          {versiculos.map((versiculo, index) => (
+            <Text key={index} style={styles.versiculo}>
+              {index + 1}. {versiculo}
+            </Text>
+          ))}
+          <View style={{ height: 40 }} />
+        </ScrollView>
         <View style={styles.botoesContainer}>
           <Button
             title="Capítulo Anterior"
@@ -140,17 +140,13 @@ export default function Biblia() {
         <Text style={styles.subtitle}>
           Bíblia Sagrada {versaoAtual === 'avemaria' ? 'Versão Ave Maria' : 'Versão Jerusalém'}
         </Text>
-
         <View style={styles.subHeaderButtons}>
-          <Button
-            title="Home"
-            onPress={() => {
-              router.push({
-                pathname: '/',
-              });
-            }}
-          />
-          <Button title="Opções" onPress={() => setModalVisible(true)} />
+          <TouchableOpacity onPress={() => router.push({ pathname: '/' })} style={styles.headerButton}>
+            <Text style={styles.headerButtonText}>Home</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.headerButton}>
+            <Text style={styles.headerButtonText}>Opções</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -274,12 +270,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#333',
     width: '100%',
-    alignItems: 'center', 
+    alignItems: 'center',
   },
   itemTexto: {
     fontSize: 18,
     color: '#ffffff',
-    textAlign: 'center', 
+    textAlign: 'center',
   },
   title: {
     fontSize: 28,
@@ -313,13 +309,28 @@ const styles = StyleSheet.create({
   },
   subHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 10,
+    flexWrap: 'wrap', // garante que os botões não sejam cortados em telas pequenas
   },
+
   subHeaderButtons: {
     flexDirection: 'row',
     gap: 10,
+  },
+
+  headerButton: {
+    backgroundColor: '#333',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 5,
+    marginLeft: 10,
+  },
+
+  headerButtonText: {
+    color: '#fff',
+    fontSize: 14,
   },
   modalOverlay: {
     flex: 1,

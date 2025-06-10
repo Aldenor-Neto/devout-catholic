@@ -1,5 +1,4 @@
-const oracoesMarkdown = `
-# ORAÇÃO EUCARÍSTICA I
+const oracoesMarkdown = `# ORAÇÃO EUCARÍSTICA I
 
 CP. Pai de misericórdia,  
 a quem sobem nossos louvores,  

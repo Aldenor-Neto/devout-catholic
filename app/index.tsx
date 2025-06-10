@@ -2,12 +2,12 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import {
   Alert,
-  Button,
   Image,
   Platform,
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 
@@ -20,7 +20,7 @@ export default function Home() {
     'Orações Eucarísticas',
     'Celebração da Palavra',
     'Santo do Dia',
-    'Meditação',
+    'Motivacional',
     'Anotações',
   ];
 
@@ -28,19 +28,18 @@ export default function Home() {
     try {
       if (nome === 'Bíblia Sagrada') {
         router.push('/screens/biblia');
-
       } else if (nome === 'Liturgia Diária') {
         router.push('/screens/liturgia');
-
       } else if (nome === 'Anotações') {
         router.push('/screens/anotacoes/anotacoes');
-
       } else if (nome === 'Celebração da Palavra') {
         router.push('/screens/celebracao');
-
       } else if (nome === 'Orações Eucarísticas') {
         router.push('/screens/oracoes-eucaristicas');
-
+      } else if (nome === 'Motivacional') {
+        router.push('/screens/motivacional');
+      } else if (nome === 'Santo do Dia') {
+        router.push('/screens/santoDoDia');
       } else {
         const mensagem = `Você selecionou: ${nome}`;
         Platform.OS === 'web'
@@ -54,29 +53,27 @@ export default function Home() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.header}>
-        <Image
-          source={require('../assets/images/símbolos católicos.jpg')}
-          style={styles.image}
-          resizeMode="contain"
-          accessible={true}
-          accessibilityLabel="imagem de Uma cruz de madeira centralizada, com um cálice dourado à esquerda e uma Bíblia marrom à direita, acompanhada de duas hóstias brancas. Ao redor da cruz, há ramos verdes formando uma coroa. No fundo, há um círculo amarelo com raios que emanam do centro. Na parte inferior, há uma faixa amarela em branco"
-        />
-        <Text style={styles.title}>Devout Catholic</Text>
-      </View>
-      <View>
-        <Text style={styles.subtitle}>Sou católico, pratíco minha fé!</Text>
-      </View>
+      <Image
+        source={require('../assets/images/símbolos católicos.jpg')}
+        style={styles.image}
+        resizeMode="contain"
+        accessible={true}
+        accessibilityLabel="imagem de Uma cruz de madeira centralizada..."
+      />
+      <Text style={styles.title}>Devout Catholic</Text>
+      <Text style={styles.subtitle}>Sou católico, pratico minha fé!</Text>
 
       <View style={styles.buttonList}>
         {funcionalidades.map((item) => (
-          <View key={item} style={styles.buttonContainer}>
-            <Button
-              title={item}
-              color="#1e90ff"
-              onPress={() => handleFuncionalidade(item)}
-            />
-          </View>
+          <TouchableOpacity
+            key={item}
+            style={styles.button}
+            onPress={() => handleFuncionalidade(item)}
+            accessible={true}
+            accessibilityLabel={`Botão ${item}`}
+          >
+            <Text style={styles.buttonText}>{item}</Text>
+          </TouchableOpacity>
         ))}
       </View>
     </ScrollView>
@@ -86,41 +83,49 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: '#121212', // fundo escuro
+    backgroundColor: '#121212',
+    alignItems: 'center',
     padding: 20,
-    paddingTop: 60,
-    alignItems: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-    marginBottom: 30,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#ffffff', // texto branco para contraste
-    flex: 1,
-    flexWrap: 'wrap',
+    paddingTop: 40,
   },
   image: {
-    width: 120,
-    height: 120,
-    marginLeft: 10,
+    width: 100,
+    height: 100,
+    marginBottom: 15,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginBottom: 5,
+    textAlign: 'center',
   },
   subtitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 20,
-    color: '#cccccc', // texto secundário mais claro
-    alignSelf: 'flex-start',
+    fontSize: 16,
+    fontStyle: 'italic',
+    color: '#cccccc',
+    marginBottom: 25,
+    textAlign: 'center',
   },
   buttonList: {
     width: '100%',
+    alignItems: 'center',
   },
-  buttonContainer: {
-    marginBottom: 15,
+  button: {
+    backgroundColor: 'transparent', // fundo transparente
+    borderWidth: 1, // borda fina
+    borderColor: '#1e90ff', // azul
+    paddingVertical: 10,
+    paddingHorizontal: 25,
+    borderRadius: 10,
+    marginBottom: 14,
+    width: '80%',
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#ffffff', // texto branco
+    fontSize: 15,
+    fontWeight: '600',
   },
 });
+ 

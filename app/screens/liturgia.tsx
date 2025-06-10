@@ -98,14 +98,14 @@ export default function LiturgiaScreen() {
     <View style={styles.container}>
       <View>
         <Header />
-        <Button
-          title="Home"
-          onPress={() => {
-            router.push({
-              pathname: '/',
-            });
-          }}
-        />
+        <View style={styles.subHeaderButtons}>
+          <TouchableOpacity onPress={() => router.push({ pathname: '/' })} style={styles.headerButton}>
+            <Text style={styles.headerButtonText}>Home</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push({ pathname: '/screens/anotacoes/criarNota' })} style={styles.headerButton}>
+            <Text style={styles.headerButtonText}>Criar nota</Text>
+          </TouchableOpacity>
+        </View>
       </View>
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Liturgia Diária</Text>
@@ -268,6 +268,8 @@ export default function LiturgiaScreen() {
                 {reflexoes['liturgia'] && (
                   <Text style={styles.liturgiaDetails}>{reflexoes['liturgia']}</Text>
                 )}
+                <Text></Text>
+                <Text></Text>
               </>
             )}
 
@@ -366,5 +368,20 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginTop: 10,
     alignItems: 'center',
+  },
+  subHeaderButtons: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  headerButton: {
+    backgroundColor: '#333',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 5,
+    marginLeft: 10,
+  },
+  headerButtonText: {
+    color: '#fff',
+    fontSize: 14,
   },
 });
