@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { TextInput } from 'react-native';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
@@ -11,6 +12,7 @@ export default function SantoDoDiaScreen() {
   const [loading, setLoading] = useState<boolean>(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
+  const [searchText, setSearchText] = useState<string>(''); // Novo estado
 
   const router = useRouter();
 
@@ -20,11 +22,18 @@ export default function SantoDoDiaScreen() {
     return `${day}/${month}`;
   };
 
-  const gerarSanto = async (data: Date) => {
+  const gerarSanto = async (data: Date, textoBusca: string = '') => {
     setLoading(true);
     setSanto(null);
-    const dataFormatada = formatDateForPrompt(data);
-    const frasePrompt = `o que é celebrado no dia ${dataFormatada} pela igreja catõlica apostolica romana? qual o santo para essa data? qual a sua historia?`;
+
+    let frasePrompt = '';
+
+    if (textoBusca.trim() !== '') {
+      frasePrompt = `fale sobre a historia e a devoção ao santo ${textoBusca.trim()}`;
+    } else {
+      const dataFormatada = formatDateForPrompt(data);
+      frasePrompt = `o que é celebrado no dia ${dataFormatada} pela igreja católica apostólica romana? qual o santo para essa data? qual a sua história?`;
+    }
 
     try {
       const resposta = await generateReflection(frasePrompt);
@@ -46,7 +55,11 @@ export default function SantoDoDiaScreen() {
     const currentDate = selected || selectedDate;
     setShowDatePicker(Platform.OS === 'ios');
     setSelectedDate(currentDate);
-    gerarSanto(currentDate);
+    gerarSanto(currentDate, searchText);
+  };
+
+  const onSearchSubmit = () => {
+    gerarSanto(selectedDate, searchText);
   };
 
   useEffect(() => {
@@ -65,6 +78,16 @@ export default function SantoDoDiaScreen() {
           <Text style={styles.navButtonText}>Criar Nota</Text>
         </TouchableOpacity>
       </View>
+
+      <TextInput
+        style={styles.input}
+        placeholder="Busque por um santo"
+        placeholderTextColor="#aaa"
+        value={searchText}
+        onChangeText={setSearchText}
+        onSubmitEditing={onSearchSubmit}
+        returnKeyType="search"
+      />
 
       <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.dateButton}>
         <Text style={styles.buttonText}>
@@ -90,7 +113,7 @@ export default function SantoDoDiaScreen() {
           <Text style={styles.meditacaoTexto}>{santo}</Text>
         ) : (
           <Text style={styles.placeholderText}>
-            Selecione uma data para descobrir o santo celebrado pela Igreja Católica.
+            Selecione uma data ou digite o nome de um santo para descobrir mais.
           </Text>
         )}
       </ScrollView>
@@ -165,4 +188,16 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
+  input: {
+    backgroundColor: '#1e1e1e',
+    color: '#fff',
+    borderWidth: 1,
+    borderColor: '#444',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    fontSize: 16,
+    marginBottom: 16,
+  },
+
 });
