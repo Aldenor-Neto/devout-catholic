@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 
 import Header from '../../components/header';
 import { generateReflection } from '../util/gemini';
+import { formatarReflexao } from '../util/formatarReflexao';
 
 export default function SantoDoDiaScreen() {
   const [santo, setSanto] = useState<string | null>(null);
@@ -111,7 +112,9 @@ export default function SantoDoDiaScreen() {
         {loading ? (
           <ActivityIndicator size="large" color="#fff" />
         ) : santo ? (
-          <Text style={styles.meditacaoTexto}>{santo}</Text>
+          <View style={styles.meditacaoTexto}>
+            {formatarReflexao(santo || '')}
+          </View>
         ) : (
           <Text style={styles.placeholderText}>
             Selecione uma data ou digite o nome de um santo para descobrir mais.
@@ -142,10 +145,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   meditacaoTexto: {
-    fontSize: 16,
-    color: '#e0e0e0',
     marginBottom: 24,
-    textAlign: 'justify',
+    alignSelf: 'stretch', // garante que ocupe a largura disponível
+    paddingHorizontal: 8,
   },
   placeholderText: {
     fontSize: 16,

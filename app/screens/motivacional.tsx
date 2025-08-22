@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator
 import { useRouter } from 'expo-router';
 import Header from '../../components/header';
 import { generateReflection } from '../util/gemini';
+import { formatarReflexao } from '../util/formatarReflexao';
 
 export default function MeditacoesScreen() {
   const [meditacao, setMeditacao] = useState<string | null>(null);
@@ -44,31 +45,33 @@ export default function MeditacoesScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.title}>Meditação do Dia</Text>
+<ScrollView contentContainerStyle={styles.scrollContent}>
+  <Text style={styles.title}>Meditação do Dia</Text>
 
-        {loading ? (
-          <ActivityIndicator size="large" color="#fff" />
-        ) : meditacao ? (
-          <Text style={styles.meditacaoTexto}>{meditacao}</Text>
-        ) : (
-          <Text style={styles.placeholderText}>
-            Pressione o botão abaixo para gerar uma meditação motivacional inspirada nos santos da Igreja Católica.
-          </Text>
-        )}
+  {loading ? (
+    <ActivityIndicator size="large" color="#fff" />
+  ) : meditacao ? (
+    <View style={styles.meditacaoTexto}>
+      {formatarReflexao(meditacao)}
+    </View>
+  ) : (
+    <Text style={styles.placeholderText}>
+      Pressione o botão abaixo para gerar uma meditação motivacional inspirada nos santos da Igreja Católica.
+    </Text>
+  )}
 
-        <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleGerarMeditacao}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Gerar Nova Meditação</Text>
-          )}
-        </TouchableOpacity>
-      </ScrollView>
+  <TouchableOpacity
+    style={[styles.button, loading && styles.buttonDisabled]}
+    onPress={handleGerarMeditacao}
+    disabled={loading}
+  >
+    {loading ? (
+      <ActivityIndicator color="#fff" />
+    ) : (
+      <Text style={styles.buttonText}>Gerar Nova Meditação</Text>
+    )}
+  </TouchableOpacity>
+</ScrollView>
     </View>
   );
 }

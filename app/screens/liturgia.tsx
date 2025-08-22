@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { generateReflection } from '../../app/util/gemini';
+import { formatarReflexao } from '../util/formatarReflexao';
 
 import Header from '../../components/header';
 import { Liturgia } from '../interface/liturgiaData';
@@ -23,65 +24,7 @@ export default function LiturgiaScreen() {
 
   const router = useRouter();
 
-  // Função para formatar o texto das reflexões, tratando markdown
-  const formatarReflexao = (texto: string) => {
-    if (!texto) return null;
-
-    // Divide o texto em linhas
-    const linhas = texto.split('\n');
-
-    return linhas.map((linha, index) => {
-      if (!linha.trim()) return <Text key={index} style={styles.linhaVazia}></Text>;
-
-      // Verifica se é um marcador de lista (começa com *)
-      if (linha.trim().startsWith('* ')) {
-        const conteudo = linha.trim().substring(2); // Remove o "* "
-        return (
-          <Text key={index} style={styles.linha}>
-            <Text style={styles.marcador}>• </Text>
-            {formatarPartesTexto(conteudo)}
-          </Text>
-        );
-      }
-
-      // Verifica se é um marcador de lista (começa com -)
-      if (linha.trim().startsWith('- ')) {
-        const conteudo = linha.trim().substring(2); // Remove o "- "
-        return (
-          <Text key={index} style={styles.linha}>
-            <Text style={styles.marcador}>• </Text>
-            {formatarPartesTexto(conteudo)}
-          </Text>
-        );
-      }
-
-      // Linha normal
-      return (
-        <Text key={index} style={styles.linha}>
-          {formatarPartesTexto(linha)}
-        </Text>
-      );
-    });
-  };
-
-  // Função para formatar partes do texto (negrito, etc.)
-  const formatarPartesTexto = (texto: string) => {
-    if (!texto) return null;
-
-    // Divide o texto mantendo os marcadores de negrito
-    const partes = texto.split(/(\*\*.*?\*\*)/g);
-
-    return partes.map((parte, i) => {
-      const negrito = /^\*\*(.*?)\*\*$/.exec(parte);
-      return (
-        <Text key={i} style={negrito ? styles.negrito : undefined}>
-          {negrito ? negrito[1] : parte}
-        </Text>
-      );
-    });
-  };
-
-  const fetchLiturgiaData = async (dia: number, mes: number, ano: number) => {
+    const fetchLiturgiaData = async (dia: number, mes: number, ano: number) => {
     setLoading(true);
     try {
       const response = await fetch(`https://liturgia.up.railway.app/?dia=${dia}&mes=${mes < 10 ? `0${mes}` : mes}&ano=${ano}`);
