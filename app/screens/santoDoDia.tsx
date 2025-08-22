@@ -101,6 +101,7 @@ export default function SantoDoDiaScreen() {
           mode="date"
           display={Platform.OS === 'ios' ? 'spinner' : 'calendar'}
           onChange={onDateChange}
+          maximumDate={new Date(new Date().setMonth(new Date().getMonth() + 2))}
         />
       )}
 

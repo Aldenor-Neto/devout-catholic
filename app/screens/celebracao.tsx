@@ -268,6 +268,7 @@ export default function CelebracaoScreen() {
             mode="date"
             display="default"
             onChange={onDateChange}
+            maximumDate={new Date(new Date().setMonth(new Date().getMonth() + 2))}
           />
         )}
       </ScrollView>
@@ -359,7 +360,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'right',
   },
-    subHeaderButtons: {
+  subHeaderButtons: {
     flexDirection: 'row',
     gap: 10,
   },

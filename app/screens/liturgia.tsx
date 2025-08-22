@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Text, View, TouchableOpacity, StyleSheet, ActivityIndicator, ScrollView, Platform, Button } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { generateReflection } from '../../app/util/gemini';
 
-import { Liturgia } from '../interface/liturgiaData';
 import Header from '../../components/header';
+import { Liturgia } from '../interface/liturgiaData';
 
 export default function LiturgiaScreen() {
   const [liturgiaData, setLiturgiaData] = useState<Liturgia | null>(null);
@@ -22,6 +22,64 @@ export default function LiturgiaScreen() {
   const [selectedDate, setSelectedDate] = useState(new Date()); // Data selecionada
 
   const router = useRouter();
+
+  // Função para formatar o texto das reflexões, tratando markdown
+  const formatarReflexao = (texto: string) => {
+    if (!texto) return null;
+
+    // Divide o texto em linhas
+    const linhas = texto.split('\n');
+
+    return linhas.map((linha, index) => {
+      if (!linha.trim()) return <Text key={index} style={styles.linhaVazia}></Text>;
+
+      // Verifica se é um marcador de lista (começa com *)
+      if (linha.trim().startsWith('* ')) {
+        const conteudo = linha.trim().substring(2); // Remove o "* "
+        return (
+          <Text key={index} style={styles.linha}>
+            <Text style={styles.marcador}>• </Text>
+            {formatarPartesTexto(conteudo)}
+          </Text>
+        );
+      }
+
+      // Verifica se é um marcador de lista (começa com -)
+      if (linha.trim().startsWith('- ')) {
+        const conteudo = linha.trim().substring(2); // Remove o "- "
+        return (
+          <Text key={index} style={styles.linha}>
+            <Text style={styles.marcador}>• </Text>
+            {formatarPartesTexto(conteudo)}
+          </Text>
+        );
+      }
+
+      // Linha normal
+      return (
+        <Text key={index} style={styles.linha}>
+          {formatarPartesTexto(linha)}
+        </Text>
+      );
+    });
+  };
+
+  // Função para formatar partes do texto (negrito, etc.)
+  const formatarPartesTexto = (texto: string) => {
+    if (!texto) return null;
+
+    // Divide o texto mantendo os marcadores de negrito
+    const partes = texto.split(/(\*\*.*?\*\*)/g);
+
+    return partes.map((parte, i) => {
+      const negrito = /^\*\*(.*?)\*\*$/.exec(parte);
+      return (
+        <Text key={i} style={negrito ? styles.negrito : undefined}>
+          {negrito ? negrito[1] : parte}
+        </Text>
+      );
+    });
+  };
 
   const fetchLiturgiaData = async (dia: number, mes: number, ano: number) => {
     setLoading(true);
@@ -166,7 +224,9 @@ export default function LiturgiaScreen() {
                 </TouchableOpacity>
 
                 {reflexoes['primeira'] && (
-                  <Text style={styles.liturgiaDetails}>{reflexoes['primeira']}</Text>
+                  <View style={styles.reflexaoContainer}>
+                    {formatarReflexao(reflexoes['primeira'])}
+                  </View>
                 )}
 
                 <Text style={styles.liturgiaTitle}>Salmo</Text>
@@ -186,7 +246,9 @@ export default function LiturgiaScreen() {
                 </TouchableOpacity>
 
                 {reflexoes['salmo'] && (
-                  <Text style={styles.liturgiaDetails}>{reflexoes['salmo']}</Text>
+                  <View style={styles.reflexaoContainer}>
+                    {formatarReflexao(reflexoes['salmo'])}
+                  </View>
                 )}
 
                 {liturgiaData.segundaLeitura !== null && (
@@ -216,7 +278,9 @@ export default function LiturgiaScreen() {
                         </TouchableOpacity>
 
                         {reflexoes['segunda'] && (
-                          <Text style={styles.liturgiaDetails}>{reflexoes['segunda']}</Text>
+                          <View style={styles.reflexaoContainer}>
+                            {formatarReflexao(reflexoes['segunda'])}
+                          </View>
                         )}
 
                       </>
@@ -243,7 +307,9 @@ export default function LiturgiaScreen() {
                 </TouchableOpacity>
 
                 {reflexoes['evangelho'] && (
-                  <Text style={styles.liturgiaDetails}>{reflexoes['evangelho']}</Text>
+                  <View style={styles.reflexaoContainer}>
+                    {formatarReflexao(reflexoes['evangelho'])}
+                  </View>
                 )}
 
                 <TouchableOpacity
@@ -261,12 +327,14 @@ export default function LiturgiaScreen() {
                   }}
                 >
                   <Text style={styles.buttonText}>
-                    {gerandoReflexao === 'liturgia' ? 'Gerando reflexão...' : 'Qual a ligação entre as leituras?'}
+                    {gerandoReflexao === 'liturgia' ? 'Gerando reflexão...' : 'Reflexão da Liturgia'}
                   </Text>
                 </TouchableOpacity>
 
                 {reflexoes['liturgia'] && (
-                  <Text style={styles.liturgiaDetails}>{reflexoes['liturgia']}</Text>
+                  <View style={styles.reflexaoContainer}>
+                    {formatarReflexao(reflexoes['liturgia'])}
+                  </View>
                 )}
                 <Text></Text>
                 <Text></Text>
@@ -295,6 +363,7 @@ export default function LiturgiaScreen() {
             mode="date"
             display="default"
             onChange={onDateChange}
+            maximumDate={new Date(new Date().setMonth(new Date().getMonth() + 2))}
           />
         )}
       </ScrollView>
@@ -383,5 +452,30 @@ const styles = StyleSheet.create({
   headerButtonText: {
     color: '#fff',
     fontSize: 14,
+  },
+  linhaVazia: {
+    height: 10, // Espaço vazio entre as linhas
+  },
+  linha: {
+    color: '#fff',
+    fontSize: 16,
+    marginBottom: 8,
+    lineHeight: 22,
+    textAlign: 'left',
+  },
+  marcador: {
+    color: '#fff',
+    fontSize: 16,
+    marginRight: 8,
+    fontWeight: 'bold',
+  },
+  negrito: {
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  reflexaoContainer: {
+    marginVertical: 10,
+    paddingHorizontal: 20,
+    width: '100%',
   },
 });

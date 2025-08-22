@@ -10,7 +10,7 @@ export default function Header() {
           style={styles.image}
           resizeMode="contain"
           accessible
-          accessibilityLabel="Imagem de símbolos católicos, com cruz, cálice, bíblia e hóstias"
+          accessibilityLabel="imagem de uma representação compacta e simbólica de elementos fundamentais da fé cristã, com ênfase na Eucaristia, na Palavra de Deus e na Cruz como centro da salvação. No centro há uma grande cruz de madeira de tonalidade escura, com um círculo no ponto de intersecção dos braços. Ao redor da cruz, envolvendo-a parcialmente, há uma coroa de folhas verdes. Na base da cruz, no lado esquerdo, encontra-se um cálice com vinho.  No lado direito da base, há uma bíblia de capa marrom com uma pequena cruz gravada em sua superfície.  Abaixo do livro, dispostas horizontalmente, estão três hóstias brancas e arredondadas. Ao fundo da parte superior da cruz, projeta-se um semicírculo em um tom de amarelo pálido com raios de luz que se expandem a partir do centro, criando um efeito de brilho ou auréola"
         />
         <View style={styles.textContainer}>
           <Text style={styles.title}>Devout Catholic</Text>
