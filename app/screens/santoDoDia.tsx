@@ -1,50 +1,54 @@
 import React, { useState, useEffect } from 'react';
-import { TextInput } from 'react-native';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  TextInput,
+  FlatList,
+  Platform,
+} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 
 import Header from '../../components/header';
-import { generateReflection } from '../util/gemini';
-import { formatarReflexao } from '../util/formatarReflexao';
+import santosData from '../../assets/data/santos.json'; // importa o JSON
 
 export default function SantoDoDiaScreen() {
-  const [santo, setSanto] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [santos, setSantos] = useState<any[]>([]);
+  const [santosDoDia, setSantosDoDia] = useState<any[]>([]);
+  const [santoSelecionado, setSantoSelecionado] = useState<any | null>(null);
+  const [loading, setLoading] = useState(false);
+
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
-  const [searchText, setSearchText] = useState<string>(''); // Novo estado
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const [searchText, setSearchText] = useState('');
+  const [filteredSantos, setFilteredSantos] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const router = useRouter();
 
-  const formatDateForPrompt = (date: Date) => {
+  useEffect(() => {
+    setSantos(santosData);
+    buscarSantoPorData(selectedDate);
+  }, []);
+
+  const formatDate = (date: Date) => {
     const day = date.getDate().toString().padStart(2, '0');
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     return `${day}/${month}`;
   };
 
-  const gerarSanto = async (data: Date, textoBusca: string = '') => {
+  const buscarSantoPorData = (date: Date) => {
     setLoading(true);
-    setSanto(null);
-
-    let frasePrompt = '';
-
-    if (textoBusca.trim() !== '') {
-      frasePrompt = `fale sobre a historia e a devoção ao santo ${textoBusca.trim()}`;
-    } else {
-      const dataFormatada = formatDateForPrompt(data);
-      frasePrompt = `o que é celebrado no dia ${dataFormatada} pela igreja católica apostólica romana? qual o santo para essa data? qual a sua história?`;
-    }
-
-    try {
-      const resposta = await generateReflection(frasePrompt);
-      setSanto(resposta);
-    } catch (error) {
-      console.error('Erro ao buscar santo do dia:', error);
-      setSanto('Erro ao buscar santo do dia. Tente novamente mais tarde.');
-    } finally {
-      setLoading(false);
-    }
+    const dataFormatada = formatDate(date);
+    const encontrados = santosData.filter((s) => s.data === dataFormatada);
+    setSantosDoDia(encontrados);
+    setSantoSelecionado(encontrados.length === 1 ? encontrados[0] : null);
+    setLoading(false);
   };
 
   const onDateChange = (event: any, selected?: Date) => {
@@ -52,45 +56,89 @@ export default function SantoDoDiaScreen() {
       setShowDatePicker(false);
       return;
     }
-
     const currentDate = selected || selectedDate;
     setShowDatePicker(Platform.OS === 'ios');
     setSelectedDate(currentDate);
-    gerarSanto(currentDate, searchText);
+    buscarSantoPorData(currentDate);
   };
 
-  const onSearchSubmit = () => {
-    gerarSanto(selectedDate, searchText);
+  const onSearchChange = (text: string) => {
+    setSearchText(text);
+    if (text.trim().length > 0) {
+      const results = santos.filter((s) =>
+        s.nome.toLowerCase().includes(text.toLowerCase())
+      );
+      setFilteredSantos(results);
+      setShowSuggestions(true);
+    } else {
+      setShowSuggestions(false);
+    }
   };
 
-  useEffect(() => {
-    gerarSanto(selectedDate);
-  }, []);
+  const selecionarSanto = (santo: any) => {
+    setSantoSelecionado(santo);
+    setShowSuggestions(false);
+    setSearchText(santo.nome);
+  };
+
+  const abrirListaCompleta = () => {
+    const ordenados = [...santos].sort((a, b) =>
+      a.nome.localeCompare(b.nome)
+    );
+    setSantosDoDia(ordenados);
+    setSantoSelecionado(null);
+  };
 
   return (
     <View style={styles.container}>
       <Header />
 
+      {/* Navegação */}
       <View style={styles.navButtonsContainer}>
-        <TouchableOpacity style={styles.navButton} onPress={() => router.push('/')}>
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={() => router.push('/')}
+        >
           <Text style={styles.navButtonText}>Home</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton} onPress={() => router.push('/screens/anotacoes/criarNota')}>
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={() => router.push('/screens/anotacoes/criarNota')}
+        >
           <Text style={styles.navButtonText}>Criar Nota</Text>
         </TouchableOpacity>
       </View>
 
+      {/* Busca */}
       <TextInput
         style={styles.input}
         placeholder="Busque por um santo"
         placeholderTextColor="#aaa"
         value={searchText}
-        onChangeText={setSearchText}
-        onSubmitEditing={onSearchSubmit}
-        returnKeyType="search"
+        onChangeText={onSearchChange}
       />
 
-      <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.dateButton}>
+      {showSuggestions && (
+        <FlatList
+          data={filteredSantos}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={styles.suggestionItem}
+              onPress={() => selecionarSanto(item)}
+            >
+              <Text style={{ color: '#fff' }}>{item.nome}</Text>
+            </TouchableOpacity>
+          )}
+          style={styles.suggestionsList}
+        />
+      )}
+
+      {/* Botão calendário */}
+      <TouchableOpacity
+        onPress={() => setShowDatePicker(true)}
+        style={styles.dateButton}
+      >
         <Text style={styles.buttonText}>
           Selecionar Data: {selectedDate.toLocaleDateString('pt-BR')}
         </Text>
@@ -102,19 +150,37 @@ export default function SantoDoDiaScreen() {
           mode="date"
           display={Platform.OS === 'ios' ? 'spinner' : 'calendar'}
           onChange={onDateChange}
-          maximumDate={new Date(new Date().setMonth(new Date().getMonth() + 2))}
         />
       )}
 
+      {/* Botão Lista completa */}
+      <TouchableOpacity style={styles.listButton} onPress={abrirListaCompleta}>
+        <Text style={styles.buttonText}>Lista de Santos</Text>
+      </TouchableOpacity>
+
+      {/* Conteúdo */}
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.title}>Santo do Dia</Text>
 
         {loading ? (
           <ActivityIndicator size="large" color="#fff" />
-        ) : santo ? (
+        ) : santoSelecionado ? (
           <View style={styles.meditacaoTexto}>
-            {formatarReflexao(santo || '')}
+            <Text style={styles.santoNome}>{santoSelecionado.nome}</Text>
+            <Text style={styles.santoDescricao}>
+              {santoSelecionado.descricao}
+            </Text>
           </View>
+        ) : santosDoDia.length > 1 ? (
+          santosDoDia.map((santo, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.suggestionItem}
+              onPress={() => selecionarSanto(santo)}
+            >
+              <Text style={{ color: '#fff' }}>{santo.nome}</Text>
+            </TouchableOpacity>
+          ))
         ) : (
           <Text style={styles.placeholderText}>
             Selecione uma data ou digite o nome de um santo para descobrir mais.
@@ -126,17 +192,8 @@ export default function SantoDoDiaScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#121212',
-    padding: 16,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingBottom: 32,
-  },
+  container: { flex: 1, backgroundColor: '#121212', padding: 16 },
+  scrollContent: { flexGrow: 1, paddingBottom: 32 },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
@@ -144,18 +201,15 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     textAlign: 'center',
   },
-  meditacaoTexto: {
-    marginBottom: 24,
-    alignSelf: 'stretch', // garante que ocupe a largura disponível
-    paddingHorizontal: 8,
+  santoNome: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 8,
   },
-  placeholderText: {
-    fontSize: 16,
-    color: '#888',
-    marginBottom: 24,
-    textAlign: 'center',
-    paddingHorizontal: 8,
-  },
+  santoDescricao: { fontSize: 16, color: '#ddd', lineHeight: 22 },
+  meditacaoTexto: { marginBottom: 24 },
+  placeholderText: { fontSize: 16, color: '#888', textAlign: 'center' },
   navButtonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -171,26 +225,23 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#333',
   },
-  navButtonText: {
-    color: '#fff',
-    fontSize: 16,
-  },
+  navButtonText: { color: '#fff', fontSize: 16 },
   dateButton: {
     borderColor: '#fff',
     borderWidth: 2,
     paddingVertical: 12,
-    paddingHorizontal: 20,
     borderRadius: 25,
     marginVertical: 10,
-    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'transparent',
   },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
+  listButton: {
+    backgroundColor: '#333',
+    paddingVertical: 12,
+    borderRadius: 25,
+    alignItems: 'center',
+    marginBottom: 10,
   },
+  buttonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
   input: {
     backgroundColor: '#1e1e1e',
     color: '#fff',
@@ -200,7 +251,12 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 14,
     fontSize: 16,
-    marginBottom: 16,
+    marginBottom: 8,
   },
-
+  suggestionsList: { maxHeight: 150, backgroundColor: '#222', marginBottom: 10 },
+  suggestionItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+  },
 });
