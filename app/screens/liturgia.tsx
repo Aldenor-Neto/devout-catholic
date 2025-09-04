@@ -9,6 +9,7 @@ import { formatarReflexao } from '../util/formatarReflexao';
 import Header from '../../components/header';
 import { Liturgia } from '../interface/liturgiaData';
 import { initializeLiturgiaCache, getLiturgiaByDate, fetchAndStoreMonth } from '../util/liturgiacache';
+import { AppState } from 'react-native';
 
 export default function LiturgiaScreen() {
   const [liturgiaData, setLiturgiaData] = useState<Liturgia | null>(null);
@@ -38,29 +39,60 @@ export default function LiturgiaScreen() {
   };
 
   useEffect(() => {
+    let currentMonth = new Date().getMonth();
+
     const init = async () => {
       setLoading(true);
+
       await initializeLiturgiaCache();
 
-      // pré-carregar 5 meses (2 antes, atual, 2 depois)
       const today = new Date();
-      const monthsToCache = [-2, -1, 0, 1, 2];
-
-      for (const offset of monthsToCache) {
-        const d = new Date(today.getFullYear(), today.getMonth() + offset, 1);
-        const year = d.getFullYear();
-        const month = d.getMonth() + 1;
-        await fetchAndStoreMonth(year, month);
-      }
-
       const liturgiaHoje = await getLiturgiaByDate(today);
       setLiturgiaData(liturgiaHoje);
       setLoading(false);
-      showSection('leituras');
+
+      const fetchMonthIfNotCached = async (year: number, month: number) => {
+        const d = new Date(year, month - 1, 1);
+        const cached = await getLiturgiaByDate(d);
+        if (!cached) {
+          fetchAndStoreMonth(year, month); // fire-and-forget
+        }
+      };
+
+      const preloadNextMonths = () => {
+        const monthsToPreload = [1, 2];
+        monthsToPreload.forEach(async (offset) => {
+          const d = new Date(today.getFullYear(), today.getMonth() + offset, 1);
+          const year = d.getFullYear();
+          const month = d.getMonth() + 1;
+          fetchMonthIfNotCached(year, month);
+        });
+      };
+
+      preloadNextMonths();
+
+      // Listener para detectar quando o app volta para foreground
+      const subscription = AppState.addEventListener('change', async (state) => {
+        if (state === 'active') {
+          const now = new Date();
+          const newMonth = now.getMonth();
+          if (newMonth !== currentMonth) {
+            // mês mudou, atualiza currentMonth e faz preload
+            currentMonth = newMonth;
+            const liturgiaHoje = await getLiturgiaByDate(now);
+            setLiturgiaData(liturgiaHoje);
+            preloadNextMonths();
+          }
+        }
+      });
+
+      return () => {
+        subscription.remove();
+      };
     };
+
     init();
   }, []);
-
   const handleGerarReflexao = async (texto: string, id: string) => {
     setGerandoReflexao(id);
     try {
@@ -212,10 +244,10 @@ export default function LiturgiaScreen() {
 
                     handleGerarReflexao(
                       "qual a ligação entre os trechos biblicos " +
-                        liturgiaData.primeiraLeitura.referencia +
-                        liturgiaData.salmo.referencia +
-                        segundaLeituraRef +
-                        liturgiaData.evangelho.referencia,
+                      liturgiaData.primeiraLeitura.referencia +
+                      liturgiaData.salmo.referencia +
+                      segundaLeituraRef +
+                      liturgiaData.evangelho.referencia,
                       'liturgia'
                     );
                   }}
