@@ -5,6 +5,8 @@ import { useRouter } from 'expo-router';
 import { Liturgia } from '../interface/liturgiaData';
 import Header from '../../components/header';
 import Accordion from '../components/Accordion';
+import { initializeLiturgiaCache, getLiturgiaByDate } from '../util/liturgiacache';
+
 
 export default function CelebracaoScreen() {
   const [liturgiaData, setLiturgiaData] = useState<Liturgia | null>(null);
@@ -14,41 +16,40 @@ export default function CelebracaoScreen() {
 
   const router = useRouter();
 
-  const fetchLiturgiaData = async (dia: number, mes: number, ano: number) => {
-    setLoading(true);
-    try {
-      const response = await fetch(`https://liturgia.up.railway.app/?dia=${dia}&mes=${mes < 10 ? `0${mes}` : mes}&ano=${ano}`);
-      const data: Liturgia = await response.json();
-      setLiturgiaData(data);
-    } catch (error) {
-      console.error('Erro ao buscar dados da Liturgia:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+const fetchLiturgiaData = async (date: Date) => {
+  setLoading(true);
+  try {
+    const liturgia = await getLiturgiaByDate(date);
+    setLiturgiaData(liturgia);
+  } catch (error) {
+    console.error('Erro ao buscar dados da Liturgia:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const showDatePicker = () => {
     setShowDatePickerModal(true);
   };
 
-  const onDateChange = (event: any, selectedDate: Date | undefined) => {
-    const currentDate = selectedDate || new Date();
-    setShowDatePickerModal(Platform.OS === 'ios' ? true : false);
-    setSelectedDate(currentDate);
+const onDateChange = (event: any, date?: Date) => {
+  const currentDate = date || selectedDate;
+  setShowDatePickerModal(Platform.OS === 'ios');
+  setSelectedDate(currentDate);
+  fetchLiturgiaData(currentDate);
+};
 
-    const dia = currentDate.getDate();
-    const mes = currentDate.getMonth() + 1;
-    const ano = currentDate.getFullYear();
-
-    fetchLiturgiaData(dia, mes, ano);
+useEffect(() => {
+  const init = async () => {
+    setLoading(true);
+    await initializeLiturgiaCache(); // garante que o cache exista
+    const today = new Date();
+    const liturgiaHoje = await getLiturgiaByDate(today);
+    setLiturgiaData(liturgiaHoje);
+    setLoading(false);
   };
-
-  useEffect(() => {
-    const dia = new Date().getDate();
-    const mes = new Date().getMonth() + 1;
-    const ano = new Date().getFullYear();
-    fetchLiturgiaData(dia, mes, ano);
-  }, []);
+  init();
+}, []);
 
   return (
     <View style={styles.container}>
