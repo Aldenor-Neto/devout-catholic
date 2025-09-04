@@ -1,7 +1,8 @@
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Alert,
+  AppState,
   Image,
   Platform,
   ScrollView,
@@ -10,6 +11,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+
+import { initializeLiturgiaCache, getLiturgiaByDate, fetchAndStoreMonth } from '../app/util/liturgiacache';
 
 export default function Home() {
   const router = useRouter();
@@ -26,30 +29,61 @@ export default function Home() {
 
   const handleFuncionalidade = (nome: string) => {
     try {
-      if (nome === 'Bíblia Sagrada') {
-        router.push('/screens/biblia');
-      } else if (nome === 'Liturgia Diária') {
-        router.push('/screens/liturgia');
-      } else if (nome === 'Anotações') {
-        router.push('/screens/anotacoes/anotacoes');
-      } else if (nome === 'Celebração da Palavra') {
-        router.push('/screens/celebracao');
-      } else if (nome === 'Orações Eucarísticas') {
-        router.push('/screens/oracoes-eucaristicas');
-      } else if (nome === 'Motivacional') {
-        router.push('/screens/motivacional');
-      } else if (nome === 'Santo do Dia') {
-        router.push('/screens/santoDoDia');
-      } else {
+      if (nome === 'Bíblia Sagrada') router.push('/screens/biblia');
+      else if (nome === 'Liturgia Diária') router.push('/screens/liturgia');
+      else if (nome === 'Anotações') router.push('/screens/anotacoes/anotacoes');
+      else if (nome === 'Celebração da Palavra') router.push('/screens/celebracao');
+      else if (nome === 'Orações Eucarísticas') router.push('/screens/oracoes-eucaristicas');
+      else if (nome === 'Motivacional') router.push('/screens/motivacional');
+      else if (nome === 'Santo do Dia') router.push('/screens/santoDoDia');
+      else {
         const mensagem = `Você selecionou: ${nome}`;
-        Platform.OS === 'web'
-          ? window.alert(mensagem)
-          : Alert.alert('Funcionalidade', mensagem);
+        Platform.OS === 'web' ? window.alert(mensagem) : Alert.alert('Funcionalidade', mensagem);
       }
     } catch (error: any) {
       Alert.alert('Erro', error.message || 'Erro inesperado');
     }
   };
+
+  useEffect(() => {
+    let currentMonth = new Date().getMonth();
+
+    const init = async () => {
+      await initializeLiturgiaCache();
+
+      const preloadNextMonths = async () => {
+        const today = new Date();
+        const monthsToPreload = [0, 1]; // este mês e próximo
+        for (const offset of monthsToPreload) {
+          const d = new Date(today.getFullYear(), today.getMonth() + offset, 1);
+          const year = d.getFullYear();
+          const month = d.getMonth() + 1;
+          const cached = await getLiturgiaByDate(d);
+          if (!cached) {
+            fetchAndStoreMonth(year, month); // fire-and-forget
+          }
+        }
+      };
+
+      preloadNextMonths();
+
+      const subscription = AppState.addEventListener('change', async (state) => {
+        if (state === 'active') {
+          const now = new Date();
+          const newMonth = now.getMonth();
+          if (newMonth !== currentMonth) {
+            currentMonth = newMonth;
+            await initializeLiturgiaCache(); // atualiza cache do mês atual
+            preloadNextMonths();
+          }
+        }
+      });
+
+      return () => subscription.remove();
+    };
+
+    init();
+  }, []);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -112,9 +146,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   button: {
-    backgroundColor: 'transparent', // fundo transparente
-    borderWidth: 1, // borda fina
-    borderColor: '#1e90ff', // azul
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#1e90ff',
     paddingVertical: 10,
     paddingHorizontal: 25,
     borderRadius: 10,
@@ -123,9 +157,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonText: {
-    color: '#ffffff', // texto branco
+    color: '#ffffff',
     fontSize: 15,
     fontWeight: '600',
   },
 });
- 
