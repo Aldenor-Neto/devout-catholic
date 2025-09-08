@@ -1,36 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Button } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import Header from '../../components/header';
-import { generateReflection } from '../util/gemini';
-import { formatarReflexao } from '../util/formatarReflexao';
+
+import motivacionalData from '../../assets/data/motivacional.json';
 
 export default function MeditacoesScreen() {
-  const [meditacao, setMeditacao] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [meditacaoIndex, setMeditacaoIndex] = useState(0);
+  const [loading, setLoading] = useState(false);
 
   const router = useRouter();
 
-  const frasePrompt = 'gere um texto motivacional com fundamentação biblica';
+  // Recupera o item atual
+  const meditacao = motivacionalData[meditacaoIndex];
 
   const handleGerarMeditacao = async () => {
     setLoading(true);
-    setMeditacao(null);
 
-    try {
-      const resposta = await generateReflection(frasePrompt);
-      setMeditacao(resposta);
-    } catch (error) {
-      console.error('Erro ao gerar meditação:', error);
-      setMeditacao('Erro ao gerar meditação. Tente novamente mais tarde.');
-    } finally {
+    // Simula um pequeno delay só para manter o feedback visual
+    setTimeout(() => {
+      setMeditacaoIndex((prevIndex) => (prevIndex + 1) % motivacionalData.length);
       setLoading(false);
-    }
+    }, 300);
   };
 
-  // Gera a meditação automaticamente ao carregar a tela
+  // Carrega a primeira meditação automaticamente ao abrir a tela
   useEffect(() => {
-    handleGerarMeditacao();
+    setMeditacaoIndex(0);
   }, []);
 
   return (
@@ -45,33 +41,34 @@ export default function MeditacoesScreen() {
         </TouchableOpacity>
       </View>
 
-<ScrollView contentContainerStyle={styles.scrollContent}>
-  <Text style={styles.title}>Meditação do Dia</Text>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Text style={styles.title}>Meditação do Dia</Text>
 
-  {loading ? (
-    <ActivityIndicator size="large" color="#fff" />
-  ) : meditacao ? (
-    <View style={styles.meditacaoTexto}>
-      {formatarReflexao(meditacao)}
-    </View>
-  ) : (
-    <Text style={styles.placeholderText}>
-      Pressione o botão abaixo para gerar uma meditação motivacional inspirada nos santos da Igreja Católica.
-    </Text>
-  )}
+        {loading ? (
+          <ActivityIndicator size="large" color="#fff" />
+        ) : meditacao ? (
+          <View>
+            <Text style={styles.meditacaoTitulo}>{meditacao.titulo}</Text>
+            <Text style={styles.meditacaoTexto}>{meditacao.descricao}</Text>
+          </View>
+        ) : (
+          <Text style={styles.placeholderText}>
+            Nenhuma meditação disponível no momento.
+          </Text>
+        )}
 
-  <TouchableOpacity
-    style={[styles.button, loading && styles.buttonDisabled]}
-    onPress={handleGerarMeditacao}
-    disabled={loading}
-  >
-    {loading ? (
-      <ActivityIndicator color="#fff" />
-    ) : (
-      <Text style={styles.buttonText}>Gerar Nova Meditação</Text>
-    )}
-  </TouchableOpacity>
-</ScrollView>
+        <TouchableOpacity
+          style={[styles.button, loading && styles.buttonDisabled]}
+          onPress={handleGerarMeditacao}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Gerar Nova Meditação</Text>
+          )}
+        </TouchableOpacity>
+      </ScrollView>
     </View>
   );
 }
@@ -93,6 +90,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 16,
+    textAlign: 'center',
+  },
+  meditacaoTitulo: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#e0e0e0',
+    marginBottom: 10,
     textAlign: 'center',
   },
   meditacaoTexto: {
