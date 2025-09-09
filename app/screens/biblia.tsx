@@ -38,6 +38,52 @@ export default function Biblia() {
 
   const router = useRouter();
 
+  const [ultimaLeitura, setUltimaLeitura] = useState<{
+    livro: string;
+    capitulo: number;
+    versao: 'avemaria' | 'jerusalem';
+  } | null>(null);
+
+  // Carregar última leitura ao montar
+  useEffect(() => {
+    const carregarLeitura = async () => {
+      try {
+        const salvo = await AsyncStorage.getItem('ultimaLeitura');
+        if (salvo) {
+          setUltimaLeitura(JSON.parse(salvo));
+        }
+      } catch (e) {
+        console.log("Erro ao carregar última leitura", e);
+      }
+    };
+    carregarLeitura();
+  }, []);
+
+  // Função para salvar
+  const salvarLeitura = async (livro: string, capitulo: number, versao: 'avemaria' | 'jerusalem') => {
+    try {
+      const dados = { livro, capitulo, versao };
+      await AsyncStorage.setItem('ultimaLeitura', JSON.stringify(dados));
+      setUltimaLeitura(dados);
+    } catch (e) {
+      console.log("Erro ao salvar leitura", e);
+    }
+  };
+
+  // Atualizar quando mudar capítulo
+  useEffect(() => {
+    if (livroSelecionado) {
+      salvarLeitura(livroSelecionado.name, capituloAtual, versaoAtual);
+    }
+  }, [livroSelecionado, capituloAtual, versaoAtual]);
+
+  // Função para continuar leitura
+  const continuarLeitura = () => {
+    if (!ultimaLeitura) return;
+    setVersaoAtual(ultimaLeitura.versao);
+    buscarLivroLocal(ultimaLeitura.livro);
+    setCapituloAtual(ultimaLeitura.capitulo);
+  };
   // Função para carregar lista de livros da versão local
   const carregarLivrosLocal = (versao: 'avemaria' | 'jerusalem') => {
     setLoading(true);
@@ -140,6 +186,7 @@ export default function Biblia() {
         <Text style={styles.subtitle}>
           Bíblia Sagrada {versaoAtual === 'avemaria' ? 'Versão Ave Maria' : 'Versão Jerusalém'}
         </Text>
+
         <View style={styles.subHeaderButtons}>
           <TouchableOpacity onPress={() => router.push({ pathname: '/' })} style={styles.headerButton}>
             <Text style={styles.headerButtonText}>Home</Text>
@@ -147,7 +194,26 @@ export default function Biblia() {
           <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.headerButton}>
             <Text style={styles.headerButtonText}>Opções</Text>
           </TouchableOpacity>
+
+          {/* Botão Voltar só aparece quando estiver lendo */}
+          {livroSelecionado && (
+            <TouchableOpacity onPress={() => setLivroSelecionado(null)} style={styles.headerButton}>
+              <Text style={styles.headerButtonText}>Voltar</Text>
+            </TouchableOpacity>
+          )}
         </View>
+
+        {/* Botão Continuar leitura só aparece quando não estiver lendo */}
+        {!livroSelecionado && ultimaLeitura && ultimaLeitura.versao === versaoAtual && (
+          <TouchableOpacity
+            style={styles.continuarBtnDestaque}
+            onPress={continuarLeitura}
+          >
+            <Text style={styles.continuarTexto}>
+              Continuar leitura: {ultimaLeitura.livro} - Capítulo {ultimaLeitura.capitulo + 1}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {!livroSelecionado ? (
@@ -373,4 +439,31 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
   },
+  continuarBtn: {
+    backgroundColor: '#444',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 15,
+    alignItems: 'center',
+  },
+  continuarTexto: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  continuarBtnDestaque: {
+    backgroundColor: '#1e90ff', // azul destacado
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginBottom: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+
 });
