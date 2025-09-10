@@ -1,32 +1,80 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from '../../components/header';
 
 import motivacionalData from '../../assets/data/motivacional.json';
 
 export default function MeditacoesScreen() {
-  const [meditacaoIndex, setMeditacaoIndex] = useState(0);
+  const [meditacao, setMeditacao] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
   const router = useRouter();
 
-  // Recupera o item atual
-  const meditacao = motivacionalData[meditacaoIndex];
+  // Escolher aleatória sem repetição
+  const escolherMeditacao = async () => {
+    let usadosRaw = await AsyncStorage.getItem("motivacionaisUsados");
+    let usados: number[] = usadosRaw ? JSON.parse(usadosRaw) : [];
 
+    // Reinicia ciclo se todas já foram usadas
+    if (usados.length >= motivacionalData.length) {
+      usados = [];
+    }
+
+    // Filtra disponíveis
+    const disponiveis = motivacionalData
+      .map((item, idx) => ({ ...item, idx }))
+      .filter((item) => !usados.includes(item.idx));
+
+    // Escolhe aleatória
+    const randomIndex = Math.floor(Math.random() * disponiveis.length);
+    const escolhido = disponiveis[randomIndex];
+
+    // Atualiza histórico
+    usados.push(escolhido.idx);
+    await AsyncStorage.setItem("motivacionaisUsados", JSON.stringify(usados));
+
+    return escolhido;
+  };
+
+  // Recuperar ou gerar a meditação do dia
+  const getMeditacaoDoDia = async () => {
+    const hoje = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+
+    const salvo = await AsyncStorage.getItem("motivacionalHoje");
+    if (salvo) {
+      const { data, meditacao } = JSON.parse(salvo);
+      if (data === hoje) {
+        return meditacao; // já existe para hoje
+      }
+    }
+
+    // se não existe ou é de outro dia → escolhe nova
+    const nova = await escolherMeditacao();
+    await AsyncStorage.setItem("motivacionalHoje", JSON.stringify({ data: hoje, meditacao: nova }));
+    return nova;
+  };
+
+  // Botão: gera nova e redefine como meditação do dia
   const handleGerarMeditacao = async () => {
     setLoading(true);
-
-    // Simula um pequeno delay só para manter o feedback visual
-    setTimeout(() => {
-      setMeditacaoIndex((prevIndex) => (prevIndex + 1) % motivacionalData.length);
+    setTimeout(async () => {
+      const hoje = new Date().toISOString().split("T")[0];
+      const nova = await escolherMeditacao();
+      await AsyncStorage.setItem("motivacionalHoje", JSON.stringify({ data: hoje, meditacao: nova }));
+      setMeditacao(nova);
       setLoading(false);
     }, 300);
   };
 
-  // Carrega a primeira meditação automaticamente ao abrir a tela
+  // Carregar automaticamente na abertura da tela
   useEffect(() => {
-    setMeditacaoIndex(0);
+    async function carregar() {
+      const med = await getMeditacaoDoDia();
+      setMeditacao(med);
+    }
+    carregar();
   }, []);
 
   return (

@@ -154,10 +154,6 @@ export default function SantoDoDiaScreen() {
       )}
 
       {/* Botão Lista completa */}
-      <TouchableOpacity style={styles.listButton} onPress={abrirListaCompleta}>
-        <Text style={styles.buttonText}>Lista de Santos</Text>
-      </TouchableOpacity>
-
       {/* Conteúdo */}
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.title}>Santo do Dia</Text>
