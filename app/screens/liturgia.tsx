@@ -3,8 +3,8 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { generateReflection } from '../../app/util/gemini';
-import { formatarReflexao } from '../util/formatarReflexao';
+//import { generateReflection } from '../../app/util/gemini';
+//import { formatarReflexao } from '../util/formatarReflexao';
 
 import Header from '../../components/header';
 import { Liturgia } from '../interface/liturgiaData';
@@ -15,8 +15,8 @@ export default function LiturgiaScreen() {
   const [liturgiaData, setLiturgiaData] = useState<Liturgia | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [currentSection, setCurrentSection] = useState<'oferendas' | 'leituras' | 'antifona'>('leituras');
-  const [reflexoes, setReflexoes] = useState<{ [key: string]: string }>({});
-  const [gerandoReflexao, setGerandoReflexao] = useState<string | null>(null);
+  //  const [reflexoes, setReflexoes] = useState<{ [key: string]: string }>({});
+  //  const [gerandoReflexao, setGerandoReflexao] = useState<string | null>(null);
 
   const [showDatePickerModal, setShowDatePickerModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -31,7 +31,7 @@ export default function LiturgiaScreen() {
     const currentDate = date || selectedDate;
     setShowDatePickerModal(Platform.OS === 'ios');
     setSelectedDate(currentDate);
-    setReflexoes({});
+    //    setReflexoes({});
     setLoading(true);
     const liturgia = await getLiturgiaByDate(currentDate);
     setLiturgiaData(liturgia);
@@ -93,6 +93,8 @@ export default function LiturgiaScreen() {
 
     init();
   }, []);
+
+  /*
   const handleGerarReflexao = async (texto: string, id: string) => {
     setGerandoReflexao(id);
     try {
@@ -105,6 +107,7 @@ export default function LiturgiaScreen() {
       setGerandoReflexao(null);
     }
   };
+*/
 
   return (
     <View style={styles.container}>
@@ -143,12 +146,25 @@ export default function LiturgiaScreen() {
           <View style={styles.dataContainer}>
             {currentSection === 'oferendas' && (
               <>
-                <Text style={styles.liturgiaTitle}>Oração do Dia</Text>
-                <Text style={styles.liturgiaDetails}>{liturgiaData.dia}</Text>
-                <Text style={styles.liturgiaTitle}>Oferenda</Text>
-                <Text style={styles.liturgiaDetails}>{liturgiaData.oferendas}</Text>
-                <Text style={styles.liturgiaTitle}>Pós-comunhão</Text>
-                <Text style={styles.liturgiaDetails}>{liturgiaData.comunhao}</Text>
+                {'\n'}
+                <Text selectable>
+                  <Text style={styles.liturgiaTitle}>Oração do Dia</Text>
+                  {'\n\n'}
+                  <Text style={styles.liturgiaDetails}>{liturgiaData.dia}</Text>
+                </Text>
+                <Text selectable>
+                  {'\n\n'}
+                  <Text style={styles.liturgiaTitle}>Oferenda</Text>
+                  {'\n\n'}
+                  <Text style={styles.liturgiaDetails}>{liturgiaData.oferendas}</Text>
+                </Text>
+                <Text selectable>
+                  {'\n\n'}
+                  <Text style={styles.liturgiaTitle}>Pós-comunhão</Text>
+                  {'\n\n'}
+                  <Text style={styles.liturgiaDetails}>{liturgiaData.comunhao}</Text>
+                  {'\n\n\n'}
+                </Text>
               </>
             )}
 
@@ -158,11 +174,25 @@ export default function LiturgiaScreen() {
                 <Text style={styles.liturgiaDetails}>{liturgiaData.liturgia}</Text>
                 <Text style={styles.liturgiaDetails}>Cor: {liturgiaData.cor}</Text>
 
-                <Text style={styles.liturgiaTitle}>1ª Leitura</Text>
-                <Text style={styles.liturgiaDetails}>{liturgiaData.primeiraLeitura.referencia}</Text>
-                <Text style={styles.liturgiaDetails}>{liturgiaData.primeiraLeitura.titulo}</Text>
-                <Text style={styles.liturgiaDetails}>{liturgiaData.primeiraLeitura.texto}</Text>
+                <Text selectable>
+                  <Text style={styles.liturgiaTitle}>1ª Leitura</Text>
+                  {'\n'}
+                  <Text style={styles.liturgiaDetails}>{liturgiaData.primeiraLeitura.referencia}</Text>
+                  {'\n'}
+                  {'\n'}
+                  <Text style={styles.liturgiaDetails}>{liturgiaData.primeiraLeitura.titulo}</Text>
+                  {'\n'}
+                  {'\n'}
+                  <Text style={styles.liturgiaDetails}>{liturgiaData.primeiraLeitura.texto}</Text>
+                  {'\n'}
+                  {'\n'}
+                  <Text style={styles.liturgiaDetails}>Palavra do senhor</Text>
+                  {'\n'}
+                  {'\n'}
+                  {'\n'}
+                </Text>
 
+                {/*
                 <TouchableOpacity
                   style={styles.reflexaoButton}
                   onPress={() => handleGerarReflexao("qual a reflexão do trecho biblico " + liturgiaData.primeiraLeitura.texto, 'primeira')}
@@ -173,12 +203,23 @@ export default function LiturgiaScreen() {
                 </TouchableOpacity>
 
                 {reflexoes['primeira'] && <View style={styles.reflexaoContainer}>{formatarReflexao(reflexoes['primeira'])}</View>}
+*/}
 
-                <Text style={styles.liturgiaTitle}>Salmo</Text>
-                <Text style={styles.liturgiaDetails}>{liturgiaData.salmo.referencia}</Text>
-                <Text style={styles.liturgiaDetails}> Refrão: {liturgiaData.salmo.refrao}</Text>
-                <Text style={styles.liturgiaDetails}>{liturgiaData.salmo.texto}</Text>
-
+                <Text selectable>
+                  <Text style={styles.liturgiaTitle}>Salmo</Text>
+                  {'\n'}
+                  <Text style={styles.liturgiaDetails}>{liturgiaData.salmo.referencia}</Text>
+                  {'\n'}
+                  {'\n'}
+                  <Text style={styles.liturgiaDetails}> Refrão: {liturgiaData.salmo.refrao}</Text>
+                  {'\n'}
+                  {'\n'}
+                  <Text style={styles.liturgiaDetails}>{liturgiaData.salmo.texto}</Text>
+                  {'\n'}
+                  {'\n'}
+                  {'\n'}
+                </Text>
+                {/*
                 <TouchableOpacity
                   style={styles.reflexaoButton}
                   onPress={() => handleGerarReflexao("qual a reflexão do trecho biblico " + liturgiaData.salmo.texto, 'salmo')}
@@ -189,16 +230,25 @@ export default function LiturgiaScreen() {
                 </TouchableOpacity>
 
                 {reflexoes['salmo'] && <View style={styles.reflexaoContainer}>{formatarReflexao(reflexoes['salmo'])}</View>}
+*/}
 
                 {liturgiaData.segundaLeitura && (
                   <>
-                    <Text style={styles.liturgiaTitle}>Segunda Leitura</Text>
                     {typeof liturgiaData.segundaLeitura === 'object' ? (
                       <>
-                        <Text style={styles.liturgiaDetails}>{liturgiaData.segundaLeitura.referencia}</Text>
-                        <Text style={styles.liturgiaDetails}>{liturgiaData.segundaLeitura.titulo}</Text>
-                        <Text style={styles.liturgiaDetails}>{liturgiaData.segundaLeitura.texto}</Text>
 
+                        <Text selectable>
+                          <Text selectable style={styles.liturgiaTitle}>Segunda Leitura</Text>
+                          {'\n'}
+                          <Text style={styles.liturgiaDetails}>{liturgiaData.segundaLeitura.referencia}</Text>
+                          {'\n\n'}
+                          <Text style={styles.liturgiaDetails}>{liturgiaData.segundaLeitura.titulo}</Text>
+                          {'\n\n'}
+                          <Text style={styles.liturgiaDetails}>{liturgiaData.segundaLeitura.texto}</Text>
+                          {'\n\n'}
+                          <Text style={styles.liturgiaDetails}>Palavra do Senhor</Text>
+                        </Text>
+                        {/*
                         <TouchableOpacity
                           style={styles.reflexaoButton}
                           onPress={() =>
@@ -211,6 +261,7 @@ export default function LiturgiaScreen() {
                         </TouchableOpacity>
 
                         {reflexoes['segunda'] && <View style={styles.reflexaoContainer}>{formatarReflexao(reflexoes['segunda'])}</View>}
+                        */}
                       </>
                     ) : (
                       <Text style={styles.liturgiaDetails}>{liturgiaData.segundaLeitura}</Text>
@@ -218,11 +269,21 @@ export default function LiturgiaScreen() {
                   </>
                 )}
 
-                <Text style={styles.liturgiaTitle}>Evangelho</Text>
-                <Text style={styles.liturgiaDetails}>{liturgiaData.evangelho.referencia}</Text>
-                <Text style={styles.liturgiaDetails}>{liturgiaData.evangelho.titulo}</Text>
-                <Text style={styles.liturgiaDetails}>{liturgiaData.evangelho.texto}</Text>
+                <Text selectable>
+                  {'\n\n\n'}
+                  <Text style={styles.liturgiaTitle}>Evangelho</Text>
+                  {'\n'}
+                  <Text style={styles.liturgiaDetails}>{liturgiaData.evangelho.referencia}</Text>
+                  {'\n\n'}
+                  <Text style={styles.liturgiaDetails}>{liturgiaData.evangelho.titulo}</Text>
+                  {'\n\n'}
+                  <Text style={styles.liturgiaDetails}>{liturgiaData.evangelho.texto}</Text>
+                  {'\n\n'}
+                  <Text style={styles.liturgiaDetails}>Palavra da Salvação</Text>
+                  {'\n\n\n'}
+                </Text>
 
+                {/*
                 <TouchableOpacity
                   style={styles.reflexaoButton}
                   onPress={() => handleGerarReflexao("qual a reflexão do trecho biblico " + liturgiaData.evangelho.texto, 'evangelho')}
@@ -233,6 +294,7 @@ export default function LiturgiaScreen() {
                 </TouchableOpacity>
 
                 {reflexoes['evangelho'] && <View style={styles.reflexaoContainer}>{formatarReflexao(reflexoes['evangelho'])}</View>}
+                
 
                 <TouchableOpacity
                   style={styles.button}
@@ -258,19 +320,33 @@ export default function LiturgiaScreen() {
                 </TouchableOpacity>
 
                 {reflexoes['liturgia'] && <View style={styles.reflexaoContainer}>{formatarReflexao(reflexoes['liturgia'])}</View>}
+                */}
               </>
             )}
 
             {currentSection === 'antifona' && (
               <>
-                <Text style={styles.liturgiaTitle}>Antífona - Entrada</Text>
-                <Text style={styles.liturgiaDetails}>{liturgiaData.antifonas.entrada}</Text>
+                <Text selectable>
+                  {'\n\n'}
+                  <Text style={styles.liturgiaTitle}>Antífona - Entrada</Text>
+                  {'\n\n'}
+                  <Text style={styles.liturgiaDetails}>{liturgiaData.antifonas.entrada}</Text>
+                </Text>
 
-                <Text style={styles.liturgiaTitle}>Antífona - Ofertório</Text>
-                <Text style={styles.liturgiaDetails}>{liturgiaData.antifonas.ofertorio}</Text>
+                <Text selectable>
+                  {'\n\n'}
+                  <Text style={styles.liturgiaTitle}>Antífona - Ofertório</Text>
+                  {'\n\n'}
+                  <Text style={styles.liturgiaDetails}>{liturgiaData.antifonas.ofertorio}</Text>
+                </Text>
 
-                <Text style={styles.liturgiaTitle}>Antífona - Comunhão</Text>
-                <Text style={styles.liturgiaDetails}>{liturgiaData.antifonas.comunhao}</Text>
+                <Text selectable>
+                  {'\n\n'}
+                  <Text style={styles.liturgiaTitle}>Antífona - Comunhão</Text>
+                  {'\n\n'}
+                  <Text style={styles.liturgiaDetails}>{liturgiaData.antifonas.comunhao}</Text>
+                  {'\n\n\n'}
+                </Text>
               </>
             )}
           </View>

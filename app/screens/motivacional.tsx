@@ -96,8 +96,10 @@ export default function MeditacoesScreen() {
           <ActivityIndicator size="large" color="#fff" />
         ) : meditacao ? (
           <View>
+            <Text selectable style={styles.meditacaoTexto}>
             <Text style={styles.meditacaoTitulo}>{meditacao.titulo}</Text>
             <Text style={styles.meditacaoTexto}>{meditacao.descricao}</Text>
+            </Text>
           </View>
         ) : (
           <Text style={styles.placeholderText}>

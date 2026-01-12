@@ -162,8 +162,12 @@ export default function SantoDoDiaScreen() {
           <ActivityIndicator size="large" color="#fff" />
         ) : santoSelecionado ? (
           <View style={styles.meditacaoTexto}>
+            <Text selectable style={styles.santoDescricao}>
+              {'\n'}
             <Text style={styles.santoNome}>{santoSelecionado.nome}</Text>
             <Text style={styles.santoDescricao}>
+              {'\n\n'}
+              </Text>
               {santoSelecionado.descricao}
             </Text>
           </View>
