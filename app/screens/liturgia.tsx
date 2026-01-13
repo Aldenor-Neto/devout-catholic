@@ -8,12 +8,13 @@ import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TouchableOpa
 
 import Header from '../../components/header';
 import { Liturgia } from '../interface/liturgiaData';
-import { initializeLiturgiaCache, getLiturgiaByDate, fetchAndStoreMonth } from '../util/liturgiacache';
+import { initializeLiturgiaCache, getLiturgiaByDate } from '../util/liturgiacache';
 import { AppState } from 'react-native';
 
 export default function LiturgiaScreen() {
   const [liturgiaData, setLiturgiaData] = useState<Liturgia | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const [currentSection, setCurrentSection] = useState<'oferendas' | 'leituras' | 'antifona'>('leituras');
   //  const [reflexoes, setReflexoes] = useState<{ [key: string]: string }>({});
   //  const [gerandoReflexao, setGerandoReflexao] = useState<string | null>(null);
@@ -33,55 +34,56 @@ export default function LiturgiaScreen() {
     setSelectedDate(currentDate);
     //    setReflexoes({});
     setLoading(true);
-    const liturgia = await getLiturgiaByDate(currentDate);
-    setLiturgiaData(liturgia);
-    setLoading(false);
+    setError(null);
+    try {
+      const liturgia = await getLiturgiaByDate(currentDate);
+      if (liturgia) {
+        setLiturgiaData(liturgia);
+      } else {
+        setError('Não foi possível carregar a liturgia para esta data. Verifique sua conexão com a internet.');
+      }
+    } catch (err: any) {
+      console.error('Erro ao carregar liturgia:', err);
+      setError(err.message || 'Erro ao carregar a liturgia. Verifique sua conexão com a internet.');
+      setLiturgiaData(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    let currentMonth = new Date().getMonth();
-
     const init = async () => {
       setLoading(true);
+      setError(null);
 
-      await initializeLiturgiaCache();
+      try {
+        await initializeLiturgiaCache();
 
-      const today = new Date();
-      const liturgiaHoje = await getLiturgiaByDate(today);
-      setLiturgiaData(liturgiaHoje);
-      setLoading(false);
-
-      const fetchMonthIfNotCached = async (year: number, month: number) => {
-        const d = new Date(year, month - 1, 1);
-        const cached = await getLiturgiaByDate(d);
-        if (!cached) {
-          fetchAndStoreMonth(year, month); // fire-and-forget
+        const today = new Date();
+        const liturgiaHoje = await getLiturgiaByDate(today);
+        if (liturgiaHoje) {
+          setLiturgiaData(liturgiaHoje);
+        } else {
+          setError('Não foi possível carregar a liturgia de hoje. Verifique sua conexão com a internet.');
         }
-      };
-
-      const preloadNextMonths = () => {
-        const monthsToPreload = [1, 2];
-        monthsToPreload.forEach(async (offset) => {
-          const d = new Date(today.getFullYear(), today.getMonth() + offset, 1);
-          const year = d.getFullYear();
-          const month = d.getMonth() + 1;
-          fetchMonthIfNotCached(year, month);
-        });
-      };
-
-      preloadNextMonths();
+      } catch (err: any) {
+        console.error('Erro ao inicializar liturgia:', err);
+        setError(err.message || 'Erro ao carregar a liturgia. Verifique sua conexão com a internet.');
+      } finally {
+        setLoading(false);
+      }
 
       // Listener para detectar quando o app volta para foreground
       const subscription = AppState.addEventListener('change', async (state) => {
         if (state === 'active') {
-          const now = new Date();
-          const newMonth = now.getMonth();
-          if (newMonth !== currentMonth) {
-            // mês mudou, atualiza currentMonth e faz preload
-            currentMonth = newMonth;
+          try {
+            const now = new Date();
             const liturgiaHoje = await getLiturgiaByDate(now);
-            setLiturgiaData(liturgiaHoje);
-            preloadNextMonths();
+            if (liturgiaHoje) {
+              setLiturgiaData(liturgiaHoje);
+            }
+          } catch (err) {
+            console.error('Erro ao atualizar liturgia:', err);
           }
         }
       });
@@ -142,7 +144,36 @@ export default function LiturgiaScreen() {
 
         {loading && <ActivityIndicator size="large" color="#fff" />}
 
-        {liturgiaData && !loading && (
+        {error && !loading && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity
+              style={styles.retryButton}
+              onPress={async () => {
+                setError(null);
+                setLoading(true);
+                try {
+                  await initializeLiturgiaCache();
+                  const today = new Date();
+                  const liturgiaHoje = await getLiturgiaByDate(today);
+                  if (liturgiaHoje) {
+                    setLiturgiaData(liturgiaHoje);
+                  } else {
+                    setError('Não foi possível carregar a liturgia. Verifique sua conexão com a internet.');
+                  }
+                } catch (err: any) {
+                  setError(err.message || 'Erro ao carregar a liturgia. Verifique sua conexão com a internet.');
+                } finally {
+                  setLoading(false);
+                }
+              }}
+            >
+              <Text style={styles.buttonText}>Tentar Novamente</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {liturgiaData && !loading && !error && (
           <View style={styles.dataContainer}>
             {currentSection === 'oferendas' && (
               <>
@@ -382,4 +413,7 @@ const styles = StyleSheet.create({
   headerButton: { backgroundColor: '#333', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 5, marginLeft: 10 },
   headerButtonText: { color: '#fff', fontSize: 14 },
   reflexaoContainer: { marginVertical: 10, paddingHorizontal: 20, width: '100%' },
+  errorContainer: { marginTop: 20, padding: 20, backgroundColor: '#8B0000', borderRadius: 10, alignItems: 'center' },
+  errorText: { color: '#fff', fontSize: 16, textAlign: 'center', marginBottom: 15 },
+  retryButton: { backgroundColor: '#fff', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 5 },
 });

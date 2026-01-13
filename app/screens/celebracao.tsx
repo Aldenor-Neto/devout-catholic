@@ -11,6 +11,7 @@ import { initializeLiturgiaCache, getLiturgiaByDate } from '../util/liturgiacach
 export default function CelebracaoScreen() {
   const [liturgiaData, setLiturgiaData] = useState<Liturgia | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const [showDatePickerModal, setShowDatePickerModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
@@ -18,11 +19,18 @@ export default function CelebracaoScreen() {
 
 const fetchLiturgiaData = async (date: Date) => {
   setLoading(true);
+  setError(null);
   try {
     const liturgia = await getLiturgiaByDate(date);
-    setLiturgiaData(liturgia);
-  } catch (error) {
+    if (liturgia) {
+      setLiturgiaData(liturgia);
+    } else {
+      setError('Não foi possível carregar a liturgia para esta data. Verifique sua conexão com a internet.');
+    }
+  } catch (error: any) {
     console.error('Erro ao buscar dados da Liturgia:', error);
+    setError(error.message || 'Erro ao carregar a liturgia. Verifique sua conexão com a internet.');
+    setLiturgiaData(null);
   } finally {
     setLoading(false);
   }
@@ -42,11 +50,22 @@ const onDateChange = (event: any, date?: Date) => {
 useEffect(() => {
   const init = async () => {
     setLoading(true);
-    await initializeLiturgiaCache(); // garante que o cache exista
-    const today = new Date();
-    const liturgiaHoje = await getLiturgiaByDate(today);
-    setLiturgiaData(liturgiaHoje);
-    setLoading(false);
+    setError(null);
+    try {
+      await initializeLiturgiaCache(); // garante que o cache exista
+      const today = new Date();
+      const liturgiaHoje = await getLiturgiaByDate(today);
+      if (liturgiaHoje) {
+        setLiturgiaData(liturgiaHoje);
+      } else {
+        setError('Não foi possível carregar a liturgia de hoje. Verifique sua conexão com a internet.');
+      }
+    } catch (error: any) {
+      console.error('Erro ao inicializar liturgia:', error);
+      setError(error.message || 'Erro ao carregar a liturgia. Verifique sua conexão com a internet.');
+    } finally {
+      setLoading(false);
+    }
   };
   init();
 }, []);
@@ -73,7 +92,36 @@ useEffect(() => {
 
         {loading && <ActivityIndicator size="large" color="#fff" />}
 
-        {liturgiaData && !loading && (
+        {error && !loading && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity
+              style={styles.retryButton}
+              onPress={async () => {
+                setError(null);
+                setLoading(true);
+                try {
+                  await initializeLiturgiaCache();
+                  const today = new Date();
+                  const liturgiaHoje = await getLiturgiaByDate(today);
+                  if (liturgiaHoje) {
+                    setLiturgiaData(liturgiaHoje);
+                  } else {
+                    setError('Não foi possível carregar a liturgia. Verifique sua conexão com a internet.');
+                  }
+                } catch (err: any) {
+                  setError(err.message || 'Erro ao carregar a liturgia. Verifique sua conexão com a internet.');
+                } finally {
+                  setLoading(false);
+                }
+              }}
+            >
+              <Text style={styles.buttonText}>Tentar Novamente</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {liturgiaData && !loading && !error && (
           <View style={styles.dataContainer}>
             <Text style={styles.liturgiaTitle}>{liturgiaData.data}</Text>
             <Text style={styles.liturgiaDetails}>{liturgiaData.liturgia}</Text>
@@ -375,6 +423,25 @@ const styles = StyleSheet.create({
   headerButtonText: {
     color: '#fff',
     fontSize: 14,
+  },
+  errorContainer: {
+    marginTop: 20,
+    padding: 20,
+    backgroundColor: '#8B0000',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  errorText: {
+    color: '#fff',
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 15,
+  },
+  retryButton: {
+    backgroundColor: '#fff',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
   },
 
 }); 
