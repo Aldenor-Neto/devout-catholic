@@ -8,13 +8,11 @@ import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TouchableOpa
 
 import Header from '../../components/header';
 import { Liturgia } from '../interface/liturgiaData';
-import { initializeLiturgiaCache, getLiturgiaByDate } from '../util/liturgiacache';
-import { AppState } from 'react-native';
+import { initializeLiturgiaCache, getLiturgiaByDate } from '../../src/util/liturgiacache';
 
 export default function LiturgiaScreen() {
   const [liturgiaData, setLiturgiaData] = useState<Liturgia | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
   const [currentSection, setCurrentSection] = useState<'oferendas' | 'leituras' | 'antifona'>('leituras');
   //  const [reflexoes, setReflexoes] = useState<{ [key: string]: string }>({});
   //  const [gerandoReflexao, setGerandoReflexao] = useState<string | null>(null);
@@ -30,69 +28,40 @@ export default function LiturgiaScreen() {
 
   const onDateChange = async (event: any, date?: Date) => {
     const currentDate = date || selectedDate;
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/8a74bf83-7763-498f-93a2-e30655785718',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'liturgia.tsx:30',message:'onDateChange chamado',data:{dateStr:currentDate.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
     setShowDatePickerModal(Platform.OS === 'ios');
     setSelectedDate(currentDate);
-    //    setReflexoes({});
     setLoading(true);
-    setError(null);
-    try {
-      const liturgia = await getLiturgiaByDate(currentDate);
-      if (liturgia) {
-        setLiturgiaData(liturgia);
-      } else {
-        setError('Não foi possível carregar a liturgia para esta data. Verifique sua conexão com a internet.');
-      }
-    } catch (err: any) {
-      console.error('Erro ao carregar liturgia:', err);
-      setError(err.message || 'Erro ao carregar a liturgia. Verifique sua conexão com a internet.');
-      setLiturgiaData(null);
-    } finally {
-      setLoading(false);
-    }
+    const liturgia = await getLiturgiaByDate(currentDate);
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/8a74bf83-7763-498f-93a2-e30655785718',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'liturgia.tsx:35',message:'Liturgia recebida em onDateChange',data:{hasLiturgia:!!liturgia,hasData:!!(liturgia && Object.keys(liturgia).length > 0)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
+    setLiturgiaData(liturgia);
+    setLoading(false);
   };
 
   useEffect(() => {
     const init = async () => {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/8a74bf83-7763-498f-93a2-e30655785718',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'liturgia.tsx:40',message:'useEffect init iniciado',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
       setLoading(true);
-      setError(null);
+      await initializeLiturgiaCache();
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/8a74bf83-7763-498f-93a2-e30655785718',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'liturgia.tsx:43',message:'Cache inicializado',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
 
-      try {
-        await initializeLiturgiaCache();
-
-        const today = new Date();
-        const liturgiaHoje = await getLiturgiaByDate(today);
-        if (liturgiaHoje) {
-          setLiturgiaData(liturgiaHoje);
-        } else {
-          setError('Não foi possível carregar a liturgia de hoje. Verifique sua conexão com a internet.');
-        }
-      } catch (err: any) {
-        console.error('Erro ao inicializar liturgia:', err);
-        setError(err.message || 'Erro ao carregar a liturgia. Verifique sua conexão com a internet.');
-      } finally {
-        setLoading(false);
-      }
-
-      // Listener para detectar quando o app volta para foreground
-      const subscription = AppState.addEventListener('change', async (state) => {
-        if (state === 'active') {
-          try {
-            const now = new Date();
-            const liturgiaHoje = await getLiturgiaByDate(now);
-            if (liturgiaHoje) {
-              setLiturgiaData(liturgiaHoje);
-            }
-          } catch (err) {
-            console.error('Erro ao atualizar liturgia:', err);
-          }
-        }
-      });
-
-      return () => {
-        subscription.remove();
-      };
+      const today = new Date();
+      const liturgiaHoje = await getLiturgiaByDate(today);
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/8a74bf83-7763-498f-93a2-e30655785718',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'liturgia.tsx:46',message:'Liturgia de hoje recebida',data:{hasLiturgia:!!liturgiaHoje,hasData:!!(liturgiaHoje && Object.keys(liturgiaHoje).length > 0)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
+      setLiturgiaData(liturgiaHoje);
+      setLoading(false);
+      showSection('leituras');
     };
-
     init();
   }, []);
 
@@ -144,40 +113,10 @@ export default function LiturgiaScreen() {
 
         {loading && <ActivityIndicator size="large" color="#fff" />}
 
-        {error && !loading && (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity
-              style={styles.retryButton}
-              onPress={async () => {
-                setError(null);
-                setLoading(true);
-                try {
-                  await initializeLiturgiaCache();
-                  const today = new Date();
-                  const liturgiaHoje = await getLiturgiaByDate(today);
-                  if (liturgiaHoje) {
-                    setLiturgiaData(liturgiaHoje);
-                  } else {
-                    setError('Não foi possível carregar a liturgia. Verifique sua conexão com a internet.');
-                  }
-                } catch (err: any) {
-                  setError(err.message || 'Erro ao carregar a liturgia. Verifique sua conexão com a internet.');
-                } finally {
-                  setLoading(false);
-                }
-              }}
-            >
-              <Text style={styles.buttonText}>Tentar Novamente</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {liturgiaData && !loading && !error && (
+        {liturgiaData && !loading && (
           <View style={styles.dataContainer}>
             {currentSection === 'oferendas' && (
               <>
-                {'\n'}
                 <Text selectable>
                   <Text style={styles.liturgiaTitle}>Oração do Dia</Text>
                   {'\n\n'}

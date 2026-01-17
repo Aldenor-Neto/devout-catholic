@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { buscarNotaPorId, atualizarNota } from '../../interface/notasData';
+import { buscarNotaPorId, atualizarNota } from '../../../src/interface/notasData';
 import Header from '../../../components/header';
 
 export default function EditarNota() {

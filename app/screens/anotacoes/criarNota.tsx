@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import { adicionarNota } from '../../interface/notasData';
+import { adicionarNota } from '../../../src/interface/notasData';
 import Header from '../../../components/header';
 
 export default function CriarNota() {

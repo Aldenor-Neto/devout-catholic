@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { Liturgia } from '../interface/liturgiaData';
 import Header from '../../components/header';
 import Accordion from '../components/Accordion';
-import { initializeLiturgiaCache, getLiturgiaByDate } from '../util/liturgiacache';
+import { initializeLiturgiaCache, getLiturgiaByDate } from '../../src/util/liturgiacache';
 
 
 export default function CelebracaoScreen() {

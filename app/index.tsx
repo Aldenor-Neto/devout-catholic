@@ -12,7 +12,7 @@ import {
   View,
 } from 'react-native';
 
-import { initializeLiturgiaCache, getLiturgiaByDate, fetchAndStoreMonth } from '../app/util/liturgiacache';
+import { initializeLiturgiaCache, getLiturgiaByDate } from '../src/util/liturgiacache';
 
 export default function Home() {
   const router = useRouter();
@@ -59,9 +59,6 @@ export default function Home() {
           const year = d.getFullYear();
           const month = d.getMonth() + 1;
           const cached = await getLiturgiaByDate(d);
-          if (!cached) {
-            fetchAndStoreMonth(year, month); // fire-and-forget
-          }
         }
       };
 
