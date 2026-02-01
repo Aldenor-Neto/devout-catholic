@@ -55,8 +55,15 @@ export default function Biblia() {
     versao: VersaoBiblia;
   } | null>(null);
 
+  const STORAGE_VERSAO_KEY = 'versaoBibliaPadrao';
+
   useEffect(() => {
     const carregar = async () => {
+      const versaoSalva = await AsyncStorage.getItem(STORAGE_VERSAO_KEY);
+      if (versaoSalva && versaoSalva in BIBLIAS) {
+        setVersaoAtual(versaoSalva as VersaoBiblia);
+      }
+
       const salvo = await AsyncStorage.getItem('ultimaLeitura');
       if (salvo) setUltimaLeitura(JSON.parse(salvo));
     };
@@ -73,7 +80,7 @@ export default function Biblia() {
     if (livroSelecionado) {
       salvarLeitura(livroSelecionado.name, capituloAtual, versaoAtual);
     }
-  }, [livroSelecionado, capituloAtual, versaoAtual]);
+  }, [livroSelecionado, capituloAtual]);
 
   const carregarLivrosLocal = (versao: VersaoBiblia) => {
     setLoading(true);
@@ -283,8 +290,10 @@ export default function Biblia() {
               <TouchableOpacity
                 key={key}
                 style={styles.headerButton}
-                onPress={() => {
-                  setVersaoAtual(key as VersaoBiblia);
+                onPress={async () => {
+                  const novaVersao = key as VersaoBiblia;
+                  setVersaoAtual(novaVersao);
+                  await AsyncStorage.setItem(STORAGE_VERSAO_KEY, novaVersao);
                   setModalVisible(false);
                 }}
               >
