@@ -16,7 +16,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import Header from '../../components/header';
 
-// Importa os JSON locais
 import AveMariaData from '../../assets/data/Ave Maria.json';
 import JerusalemData from '../../assets/data/jerusalem.json';
 import PastoralData from '../../assets/data/pastoral.json';
@@ -28,41 +27,27 @@ type LivroCompleto = {
   chapters: string[][];
 };
 
-/* ============================
-   CENTRALIZAÇÃO DAS VERSÕES
-============================ */
 const BIBLIAS = {
-  avemaria: {
-    label: 'Versão Ave Maria',
-    data: AveMariaData,
-  },
-  jerusalem: {
-    label: 'Versão Jerusalém',
-    data: JerusalemData,
-  },
-  pastoral: {
-    label: 'Versão Pastoral',
-    data: PastoralData,
-  },
-  cnbb: {
-    label: 'Versão CNBB',
-    data: CnbbData,
-  },
+  avemaria: { label: 'Versão Ave Maria', data: AveMariaData },
+  jerusalem: { label: 'Versão Jerusalém', data: JerusalemData },
+  pastoral: { label: 'Versão Pastoral', data: PastoralData },
+  cnbb: { label: 'Versão CNBB', data: CnbbData },
 } as const;
 
 type VersaoBiblia = keyof typeof BIBLIAS;
 
 export default function Biblia() {
+  const router = useRouter();
+
   const [livros, setLivros] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [livroSelecionado, setLivroSelecionado] = useState<LivroCompleto | null>(null);
   const [capituloAtual, setCapituloAtual] = useState(0);
-  const [modalVisible, setModalVisible] = useState(false);
   const [versaoAtual, setVersaoAtual] = useState<VersaoBiblia>('avemaria');
-  const [seletorCapituloVisivel, setSeletorCapituloVisivel] = useState(false);
-  const [seletorLivroVisivel, setSeletorLivroVisivel] = useState(false);
 
-  const router = useRouter();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [seletorLivroVisivel, setSeletorLivroVisivel] = useState(false);
+  const [seletorCapituloVisivel, setSeletorCapituloVisivel] = useState(false);
 
   const [ultimaLeitura, setUltimaLeitura] = useState<{
     livro: string;
@@ -70,31 +55,18 @@ export default function Biblia() {
     versao: VersaoBiblia;
   } | null>(null);
 
-  /* ============================
-     CARREGAR ÚLTIMA LEITURA
-  ============================ */
   useEffect(() => {
-    const carregarLeitura = async () => {
-      try {
-        const salvo = await AsyncStorage.getItem('ultimaLeitura');
-        if (salvo) {
-          setUltimaLeitura(JSON.parse(salvo));
-        }
-      } catch (e) {
-        console.log('Erro ao carregar última leitura', e);
-      }
+    const carregar = async () => {
+      const salvo = await AsyncStorage.getItem('ultimaLeitura');
+      if (salvo) setUltimaLeitura(JSON.parse(salvo));
     };
-    carregarLeitura();
+    carregar();
   }, []);
 
   const salvarLeitura = async (livro: string, capitulo: number, versao: VersaoBiblia) => {
-    try {
-      const dados = { livro, capitulo, versao };
-      await AsyncStorage.setItem('ultimaLeitura', JSON.stringify(dados));
-      setUltimaLeitura(dados);
-    } catch (e) {
-      console.log('Erro ao salvar leitura', e);
-    }
+    const dados = { livro, capitulo, versao };
+    await AsyncStorage.setItem('ultimaLeitura', JSON.stringify(dados));
+    setUltimaLeitura(dados);
   };
 
   useEffect(() => {
@@ -103,22 +75,11 @@ export default function Biblia() {
     }
   }, [livroSelecionado, capituloAtual, versaoAtual]);
 
-  const continuarLeitura = () => {
-    if (!ultimaLeitura) return;
-    setVersaoAtual(ultimaLeitura.versao);
-    buscarLivroLocal(ultimaLeitura.livro);
-    setCapituloAtual(ultimaLeitura.capitulo);
-  };
-
-  /* ============================
-     LIVROS E BUSCA
-  ============================ */
   const carregarLivrosLocal = (versao: VersaoBiblia) => {
     setLoading(true);
     try {
       const data = BIBLIAS[versao].data;
-      const nomes = data.map((livro: LivroCompleto) => livro.name);
-      setLivros(nomes);
+      setLivros(data.map((l: LivroCompleto) => l.name));
     } catch {
       Alert.alert('Erro', 'Não foi possível carregar os livros');
     } finally {
@@ -136,21 +97,26 @@ export default function Biblia() {
     try {
       const data = BIBLIAS[versaoAtual].data;
       const livro = data.find((l: LivroCompleto) => l.name === nome);
-      if (!livro) throw new Error('Livro não encontrado');
+      if (!livro) throw new Error();
       setLivroSelecionado(livro);
       setCapituloAtual(0);
-    } catch (e) {
-      Alert.alert('Erro', e instanceof Error ? e.message : 'Erro desconhecido');
+    } catch {
+      Alert.alert('Erro', 'Livro não encontrado');
     } finally {
       setLoading(false);
     }
   };
 
-  /* ============================
-     RENDER CAPÍTULO
-  ============================ */
+  const continuarLeitura = () => {
+    if (!ultimaLeitura) return;
+    setVersaoAtual(ultimaLeitura.versao);
+    buscarLivroLocal(ultimaLeitura.livro);
+    setCapituloAtual(ultimaLeitura.capitulo);
+  };
+
   const renderCapitulo = () => {
     if (!livroSelecionado) return null;
+
     const versiculos = livroSelecionado.chapters[capituloAtual];
 
     return (
@@ -163,8 +129,8 @@ export default function Biblia() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => setSeletorCapituloVisivel(true)}
             style={styles.botaoSelecionarCapitulo}
+            onPress={() => setSeletorCapituloVisivel(true)}
           >
             <Text style={styles.botaoTexto}>Selecionar Capítulo</Text>
           </TouchableOpacity>
@@ -175,9 +141,9 @@ export default function Biblia() {
         </Text>
 
         <ScrollView style={styles.capituloContainer}>
-          {versiculos.map((versiculo, index) => (
-            <Text selectable key={index} style={styles.versiculo}>
-              {index + 1}. {versiculo}
+          {versiculos.map((v, i) => (
+            <Text key={i} selectable style={styles.versiculo}>
+              {i + 1}. {v}
             </Text>
           ))}
         </ScrollView>
@@ -216,16 +182,19 @@ export default function Biblia() {
         </Text>
 
         <View style={styles.subHeaderButtons}>
-          <TouchableOpacity onPress={() => router.push('/')} style={styles.headerButton}>
+          <TouchableOpacity style={styles.headerButton} onPress={() => router.push('/')}>
             <Text style={styles.headerButtonText}>Home</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.headerButton}>
+          <TouchableOpacity style={styles.headerButton} onPress={() => setModalVisible(true)}>
             <Text style={styles.headerButtonText}>Opções</Text>
           </TouchableOpacity>
 
           {livroSelecionado && (
-            <TouchableOpacity onPress={() => setLivroSelecionado(null)} style={styles.headerButton}>
+            <TouchableOpacity
+              style={styles.headerButton}
+              onPress={() => setLivroSelecionado(null)}
+            >
               <Text style={styles.headerButtonText}>Voltar</Text>
             </TouchableOpacity>
           )}
@@ -245,7 +214,10 @@ export default function Biblia() {
           data={livros}
           keyExtractor={(_, i) => i.toString()}
           renderItem={({ item }) => (
-            <TouchableOpacity style={styles.itemContainer} onPress={() => buscarLivroLocal(item)}>
+            <TouchableOpacity
+              style={styles.itemContainer}
+              onPress={() => buscarLivroLocal(item)}
+            >
               <Text style={styles.itemTexto}>{item}</Text>
             </TouchableOpacity>
           )}
@@ -254,7 +226,54 @@ export default function Biblia() {
         renderCapitulo()
       )}
 
-      {/* MODAL OPÇÕES */}
+      <Modal transparent visible={seletorLivroVisivel}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <FlatList
+              data={livros}
+              keyExtractor={(_, i) => i.toString()}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.itemContainer}
+                  onPress={() => {
+                    setSeletorLivroVisivel(false);
+                    buscarLivroLocal(item);
+                  }}
+                >
+                  <Text style={styles.itemTexto}>{item}</Text>
+                </TouchableOpacity>
+              )}
+            />
+            <Button title="Fechar" color="red" onPress={() => setSeletorLivroVisivel(false)} />
+          </View>
+        </View>
+      </Modal>
+
+      <Modal transparent visible={seletorCapituloVisivel}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            {livroSelecionado && (
+              <FlatList
+                data={Array.from({ length: livroSelecionado.chapters.length }, (_, i) => i)}
+                keyExtractor={item => item.toString()}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.itemContainer}
+                    onPress={() => {
+                      setCapituloAtual(item);
+                      setSeletorCapituloVisivel(false);
+                    }}
+                  >
+                    <Text style={styles.itemTexto}>Capítulo {item + 1}</Text>
+                  </TouchableOpacity>
+                )}
+              />
+            )}
+            <Button title="Fechar" color="red" onPress={() => setSeletorCapituloVisivel(false)} />
+          </View>
+        </View>
+      </Modal>
+
       <Modal transparent visible={modalVisible}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
@@ -284,9 +303,6 @@ export default function Biblia() {
   );
 }
 
-/* ============================
-   STYLES (INALTERADOS)
-============================ */
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#121212', padding: 20 },
   itemContainer: { padding: 10, borderBottomWidth: 1, borderBottomColor: '#333' },
@@ -300,7 +316,7 @@ const styles = StyleSheet.create({
   headerButton: { backgroundColor: '#333', padding: 8, borderRadius: 5 },
   headerButtonText: { color: '#fff' },
   modalOverlay: { flex: 1, justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)' },
-  modalContainer: { backgroundColor: '#1e1e1e', padding: 20, borderRadius: 10 },
+  modalContainer: { backgroundColor: '#1e1e1e', padding: 20, borderRadius: 10, maxHeight: '80%' },
   modalTitle: { color: '#fff', fontSize: 20, textAlign: 'center', marginBottom: 10 },
   botaoSelecionarCapitulo: { backgroundColor: '#333', padding: 6, borderRadius: 6 },
   botaoTexto: { color: '#fff' },

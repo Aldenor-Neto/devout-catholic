@@ -1,5 +1,5 @@
-import { useRouter } from 'expo-router';
-import React, { useEffect } from 'react';
+import { useRouter } from "expo-router";
+import React, { useEffect } from "react";
 import {
   Alert,
   AppState,
@@ -10,38 +10,48 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from 'react-native';
+} from "react-native";
 
-import { initializeLiturgiaCache, getLiturgiaByDate } from '../src/util/liturgiacache';
+import {
+  getLiturgiaByDate,
+  initializeLiturgiaCache,
+} from "../src/util/liturgiacache";
 
 export default function Home() {
   const router = useRouter();
 
   const funcionalidades = [
-    'Bíblia Sagrada',
-    'Liturgia Diária',
-    'Orações Eucarísticas',
-    'Celebração da Palavra',
-    'Santo do Dia',
-    'Motivacional',
-    'Anotações',
+    "Bíblia Sagrada",
+    "Liturgia Diária",
+    "Orações Eucarísticas",
+    "Celebração da Palavra",
+    "Catecismo (CIC)",
+    "Santo do Dia",
+    "Motivacional",
+    "Anotações",
   ];
 
   const handleFuncionalidade = (nome: string) => {
     try {
-      if (nome === 'Bíblia Sagrada') router.push('/screens/biblia');
-      else if (nome === 'Liturgia Diária') router.push('/screens/liturgia');
-      else if (nome === 'Anotações') router.push('/screens/anotacoes/anotacoes');
-      else if (nome === 'Celebração da Palavra') router.push('/screens/celebracao');
-      else if (nome === 'Orações Eucarísticas') router.push('/screens/oracoes-eucaristicas');
-      else if (nome === 'Motivacional') router.push('/screens/motivacional');
-      else if (nome === 'Santo do Dia') router.push('/screens/santoDoDia');
+      if (nome === "Bíblia Sagrada") router.push("/screens/biblia");
+      else if (nome === "Liturgia Diária") router.push("/screens/liturgia");
+      else if (nome === "Anotações")
+        router.push("/screens/anotacoes/anotacoes");
+      else if (nome === "Celebração da Palavra")
+        router.push("/screens/celebracao");
+      else if (nome === "Orações Eucarísticas")
+        router.push("/screens/oracoes-eucaristicas");
+      else if (nome === "Motivacional") router.push("/screens/motivacional");
+      else if (nome === "Santo do Dia") router.push("/screens/santoDoDia");
+      else if (nome === "Catecismo (CIC)") router.push("/screens/catecismo");
       else {
         const mensagem = `Você selecionou: ${nome}`;
-        Platform.OS === 'web' ? window.alert(mensagem) : Alert.alert('Funcionalidade', mensagem);
+        Platform.OS === "web"
+          ? window.alert(mensagem)
+          : Alert.alert("Funcionalidade", mensagem);
       }
     } catch (error: any) {
-      Alert.alert('Erro', error.message || 'Erro inesperado');
+      Alert.alert("Erro", error.message || "Erro inesperado");
     }
   };
 
@@ -64,17 +74,20 @@ export default function Home() {
 
       preloadNextMonths();
 
-      const subscription = AppState.addEventListener('change', async (state) => {
-        if (state === 'active') {
-          const now = new Date();
-          const newMonth = now.getMonth();
-          if (newMonth !== currentMonth) {
-            currentMonth = newMonth;
-            await initializeLiturgiaCache(); // atualiza cache do mês atual
-            preloadNextMonths();
+      const subscription = AppState.addEventListener(
+        "change",
+        async (state) => {
+          if (state === "active") {
+            const now = new Date();
+            const newMonth = now.getMonth();
+            if (newMonth !== currentMonth) {
+              currentMonth = newMonth;
+              await initializeLiturgiaCache(); // atualiza cache do mês atual
+              preloadNextMonths();
+            }
           }
-        }
-      });
+        },
+      );
 
       return () => subscription.remove();
     };
@@ -85,7 +98,7 @@ export default function Home() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Image
-        source={require('../assets/images/símbolos católicos.jpg')}
+        source={require("../assets/images/símbolos católicos.jpg")}
         style={styles.image}
         resizeMode="contain"
         accessible={true}
@@ -114,8 +127,8 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: '#121212',
-    alignItems: 'center',
+    backgroundColor: "#121212",
+    alignItems: "center",
     padding: 20,
     paddingTop: 40,
   },
@@ -126,36 +139,36 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 22,
-    fontWeight: 'bold',
-    color: '#ffffff',
+    fontWeight: "bold",
+    color: "#ffffff",
     marginBottom: 5,
-    textAlign: 'center',
+    textAlign: "center",
   },
   subtitle: {
     fontSize: 16,
-    fontStyle: 'italic',
-    color: '#cccccc',
+    fontStyle: "italic",
+    color: "#cccccc",
     marginBottom: 25,
-    textAlign: 'center',
+    textAlign: "center",
   },
   buttonList: {
-    width: '100%',
-    alignItems: 'center',
+    width: "100%",
+    alignItems: "center",
   },
   button: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     borderWidth: 1,
-    borderColor: '#1e90ff',
+    borderColor: "#1e90ff",
     paddingVertical: 10,
     paddingHorizontal: 25,
     borderRadius: 10,
     marginBottom: 14,
-    width: '80%',
-    alignItems: 'center',
+    width: "80%",
+    alignItems: "center",
   },
   buttonText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

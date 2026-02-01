@@ -2,21 +2,33 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /**
  * ============================================================
- * Constantes de segurança
+ * Configurações
  * ============================================================
  */
-const CACHE_DAYS = 7;                 // janela deslizante
-const MAX_CACHE_SIZE = 200 * 1024;    // 200 KB por dia (proteção de APK)
+const CACHE_DAYS = 7;
+const MAX_CACHE_SIZE = 200 * 1024; // 200 KB
+const META_KEY = 'liturgia-week-meta';
 
 /**
  * ============================================================
- * Helpers de data e chave
+ * Helpers de data
  * ============================================================
  */
-const getDateKey = (ano: number, mes: number, dia: number) =>
-  `liturgia-${ano}-${mes.toString().padStart(2, '0')}-${dia
-    .toString()
-    .padStart(2, '0')}`;
+const formatDate = (date: Date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
+
+const addDays = (date: Date, days: number) => {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+};
+
+const getDayKey = (date: Date) =>
+  `liturgia-${formatDate(date)}`;
 
 const dateToParts = (date: Date) => ({
   ano: date.getFullYear(),
@@ -26,87 +38,55 @@ const dateToParts = (date: Date) => ({
 
 /**
  * ============================================================
- * Cache — salvar (com size guard)
+ * Cache helpers
  * ============================================================
  */
-const saveLiturgiaDate = async (
-  ano: number,
-  mes: number,
-  dia: number,
-  dados: any
-) => {
+const saveLiturgiaDay = async (date: Date, data: any) => {
   try {
-    const json = JSON.stringify(dados);
-
-    // Proteção contra objetos grandes demais
-    if (json.length > MAX_CACHE_SIZE) {
-      console.warn('Liturgia grande demais, não cacheada');
-      return;
-    }
-
-    await AsyncStorage.setItem(getDateKey(ano, mes, dia), json);
-  } catch (e) {
-    console.warn('Erro ao salvar liturgia no cache:', e);
-  }
+    const json = JSON.stringify(data);
+    if (json.length > MAX_CACHE_SIZE) return;
+    await AsyncStorage.setItem(getDayKey(date), json);
+  } catch {}
 };
 
-/**
- * ============================================================
- * Cache — carregar
- * ============================================================
- */
-const loadLiturgiaDate = async (
-  ano: number,
-  mes: number,
-  dia: number
-) => {
+const loadLiturgiaDay = async (date: Date) => {
   try {
-    const raw = await AsyncStorage.getItem(getDateKey(ano, mes, dia));
+    const raw = await AsyncStorage.getItem(getDayKey(date));
     return raw ? JSON.parse(raw) : null;
-  } catch (e) {
-    console.warn('Erro ao ler liturgia do cache:', e);
+  } catch {
     return null;
   }
 };
 
-/**
- * ============================================================
- * Limpeza automática (mantém apenas os últimos 7 dias)
- * ============================================================
- */
-const cleanOldCache = async (baseDate: Date) => {
-  try {
-    const validKeys = new Set<string>();
-
-    for (let i = 0; i < CACHE_DAYS; i++) {
-      const d = new Date(baseDate);
-      d.setDate(d.getDate() - i);
-      const { ano, mes, dia } = dateToParts(d);
-      validKeys.add(getDateKey(ano, mes, dia));
-    }
-
-    const allKeys = await AsyncStorage.getAllKeys();
-
-    for (const key of allKeys) {
-      if (key.startsWith('liturgia-') && !validKeys.has(key)) {
-        await AsyncStorage.removeItem(key);
-      }
-    }
-  } catch (e) {
-    console.warn('Erro ao limpar cache antigo:', e);
+const clearLiturgiaCache = async () => {
+  const keys = await AsyncStorage.getAllKeys();
+  const toRemove = keys.filter(
+    k => k.startsWith('liturgia-') || k === META_KEY
+  );
+  if (toRemove.length > 0) {
+    await AsyncStorage.multiRemove(toRemove);
   }
 };
 
 /**
  * ============================================================
- * Fetch + cache (1 dia por vez)
+ * Controle da semana cacheada
  * ============================================================
  */
-const fetchAndStoreDate = async (
-  ano: number,
-  mes: number,
-  dia: number
-) => {
+const isDateInCachedWeek = (date: Date, meta: any) => {
+  if (!meta?.start || !meta?.end) return false;
+  const target = formatDate(date);
+  return target >= meta.start && target <= meta.end;
+};
+
+/**
+ * ============================================================
+ * Fetch de UM dia (usado pelo calendário)
+ * ============================================================
+ */
+const fetchSingleDay = async (date: Date) => {
+  const { ano, mes, dia } = dateToParts(date);
+
   try {
     const url = `https://liturgia.up.railway.app/?dia=${dia}&mes=${mes
       .toString()
@@ -116,36 +96,69 @@ const fetchAndStoreDate = async (
     if (!response.ok) return null;
 
     const data = await response.json();
-
     if (data && Object.keys(data).length > 0) {
-      await saveLiturgiaDate(ano, mes, dia, data);
+      await saveLiturgiaDay(date, data);
       return data;
     }
+  } catch {}
 
-    return null;
-  } catch (e) {
-    console.error(`Erro ao buscar liturgia de ${dia}/${mes}/${ano}:`, e);
-    return null;
-  }
+  return null;
 };
 
 /**
  * ============================================================
- * API pública — usada pelas telas
+ * Fetch + cache de UMA SEMANA (somente para o dia atual)
+ * ============================================================
+ */
+const fetchAndStoreWeek = async (startDate: Date) => {
+  const start = formatDate(startDate);
+  const endDate = addDays(startDate, CACHE_DAYS - 1);
+  const end = formatDate(endDate);
+
+  // regra: só limpa ANTES porque estamos conscientemente
+  // substituindo a semana ativa
+  await clearLiturgiaCache();
+
+  for (let i = 0; i < CACHE_DAYS; i++) {
+    const date = addDays(startDate, i);
+    await fetchSingleDay(date);
+  }
+
+  await AsyncStorage.setItem(
+    META_KEY,
+    JSON.stringify({ start, end })
+  );
+};
+
+/**
+ * ============================================================
+ * API pública
  * ============================================================
  */
 const getLiturgiaByDate = async (date: Date) => {
-  const { ano, mes, dia } = dateToParts(date);
+  const today = new Date();
+  const isToday =
+    formatDate(date) === formatDate(today);
 
-  // 1️⃣ tenta cache
-  const cached = await loadLiturgiaDate(ano, mes, dia);
+  // 1️⃣ Se já existe o dia no cache, retorna direto
+  const cached = await loadLiturgiaDay(date);
   if (cached) return cached;
 
-  // 2️⃣ limpeza controlada
-  await cleanOldCache(date);
+  // 2️⃣ Se NÃO é hoje (calendário)
+  // → não mexe na semana
+  if (!isToday) {
+    return await fetchSingleDay(date);
+  }
 
-  // 3️⃣ fetch + cache
-  return await fetchAndStoreDate(ano, mes, dia);
+  // 3️⃣ Se é HOJE, controla a semana
+  const metaRaw = await AsyncStorage.getItem(META_KEY);
+  const meta = metaRaw ? JSON.parse(metaRaw) : null;
+
+  if (!isDateInCachedWeek(date, meta)) {
+    await fetchAndStoreWeek(date);
+  }
+
+  return await loadLiturgiaDay(date);
 };
 
 /**
@@ -154,7 +167,7 @@ const getLiturgiaByDate = async (date: Date) => {
  * ============================================================
  */
 const initializeLiturgiaCache = async () => {
-  // intencionalmente vazio
+  // propositalmente vazio
 };
 
 /**

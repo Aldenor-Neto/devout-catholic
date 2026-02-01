@@ -1,14 +1,1 @@
-[
-  {
-    "id": 1,
-    "titulo": "Primeira Nota",
-    "descricao": "Descrição da primeira nota.",
-    "dataCriacao": "2024-11-25"
-  },
-  {
-    "id": 2,
-    "titulo": "Segunda Nota",
-    "descricao": "Descrição da segunda nota.",
-    "dataCriacao": "2024-11-26"
-  }
-]
+[]
