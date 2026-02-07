@@ -18,14 +18,12 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.aldenor.devoutcatholic",
-      "permissions": [
-        "INTERNET",
-        "ACCESS_NETWORK_STATE"
-      ]
+      "permissions": ["INTERNET", "ACCESS_NETWORK_STATE"]
     },
     "web": {
       "bundler": "metro",
       "output": "static",
+      "publicPath": "/devout-catholic/",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
