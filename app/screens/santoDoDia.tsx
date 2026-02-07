@@ -135,15 +135,38 @@ export default function SantoDoDiaScreen() {
       )}
 
       {/* Botão calendário */}
-      <TouchableOpacity
-        onPress={() => setShowDatePicker(true)}
-        style={styles.dateButton}
-      >
-        <Text style={styles.buttonText}>
-          Selecionar Data: {selectedDate.toLocaleDateString('pt-BR')}
-        </Text>
-      </TouchableOpacity>
-
+      {Platform.OS === 'web' ? (
+        <input
+          type="date"
+          value={selectedDate.toISOString().split('T')[0]}
+          onChange={(e) => {
+            const novaData = new Date(e.target.value + 'T00:00:00');
+            setSelectedDate(novaData);
+            buscarSantoPorData(novaData);
+          }}
+          style={{
+            padding: 12,
+            borderRadius: 25,
+            borderWidth: 2,
+            borderColor: '#ffffff',
+            backgroundColor: 'transparent',
+            color: '#ffffff',
+            fontSize: 16,
+            marginVertical: 10,
+            textAlign: 'center',
+            width: '100%',
+          }}
+        />
+      ) : (
+        <TouchableOpacity
+          onPress={() => setShowDatePicker(true)}
+          style={styles.dateButton}
+        >
+          <Text style={styles.buttonText}>
+            Selecionar Data: {selectedDate.toLocaleDateString('pt-BR')}
+          </Text>
+        </TouchableOpacity>
+      )}
       {showDatePicker && (
         <DateTimePicker
           value={selectedDate}
@@ -164,9 +187,9 @@ export default function SantoDoDiaScreen() {
           <View style={styles.meditacaoTexto}>
             <Text selectable style={styles.santoDescricao}>
               {'\n'}
-            <Text style={styles.santoNome}>{santoSelecionado.nome}</Text>
-            <Text style={styles.santoDescricao}>
-              {'\n\n'}
+              <Text style={styles.santoNome}>{santoSelecionado.nome}</Text>
+              <Text style={styles.santoDescricao}>
+                {'\n\n'}
               </Text>
               {santoSelecionado.descricao}
             </Text>

@@ -29,14 +29,14 @@ export default function LiturgiaScreen() {
   const onDateChange = async (event: any, date?: Date) => {
     const currentDate = date || selectedDate;
     // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/8a74bf83-7763-498f-93a2-e30655785718',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'liturgia.tsx:30',message:'onDateChange chamado',data:{dateStr:currentDate.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    fetch('http://127.0.0.1:7242/ingest/8a74bf83-7763-498f-93a2-e30655785718', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'liturgia.tsx:30', message: 'onDateChange chamado', data: { dateStr: currentDate.toISOString() }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'C' }) }).catch(() => { });
     // #endregion
     setShowDatePickerModal(Platform.OS === 'ios');
     setSelectedDate(currentDate);
     setLoading(true);
     const liturgia = await getLiturgiaByDate(currentDate);
     // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/8a74bf83-7763-498f-93a2-e30655785718',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'liturgia.tsx:35',message:'Liturgia recebida em onDateChange',data:{hasLiturgia:!!liturgia,hasData:!!(liturgia && Object.keys(liturgia).length > 0)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    fetch('http://127.0.0.1:7242/ingest/8a74bf83-7763-498f-93a2-e30655785718', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'liturgia.tsx:35', message: 'Liturgia recebida em onDateChange', data: { hasLiturgia: !!liturgia, hasData: !!(liturgia && Object.keys(liturgia).length > 0) }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'C' }) }).catch(() => { });
     // #endregion
     setLiturgiaData(liturgia);
     setLoading(false);
@@ -45,18 +45,18 @@ export default function LiturgiaScreen() {
   useEffect(() => {
     const init = async () => {
       // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/8a74bf83-7763-498f-93a2-e30655785718',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'liturgia.tsx:40',message:'useEffect init iniciado',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      fetch('http://127.0.0.1:7242/ingest/8a74bf83-7763-498f-93a2-e30655785718', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'liturgia.tsx:40', message: 'useEffect init iniciado', data: {}, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'D' }) }).catch(() => { });
       // #endregion
       setLoading(true);
       await initializeLiturgiaCache();
       // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/8a74bf83-7763-498f-93a2-e30655785718',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'liturgia.tsx:43',message:'Cache inicializado',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      fetch('http://127.0.0.1:7242/ingest/8a74bf83-7763-498f-93a2-e30655785718', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'liturgia.tsx:43', message: 'Cache inicializado', data: {}, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'D' }) }).catch(() => { });
       // #endregion
 
       const today = new Date();
       const liturgiaHoje = await getLiturgiaByDate(today);
       // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/8a74bf83-7763-498f-93a2-e30655785718',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'liturgia.tsx:46',message:'Liturgia de hoje recebida',data:{hasLiturgia:!!liturgiaHoje,hasData:!!(liturgiaHoje && Object.keys(liturgiaHoje).length > 0)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      fetch('http://127.0.0.1:7242/ingest/8a74bf83-7763-498f-93a2-e30655785718', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'liturgia.tsx:46', message: 'Liturgia de hoje recebida', data: { hasLiturgia: !!liturgiaHoje, hasData: !!(liturgiaHoje && Object.keys(liturgiaHoje).length > 0) }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'D' }) }).catch(() => { });
       // #endregion
       setLiturgiaData(liturgiaHoje);
       setLoading(false);
@@ -92,13 +92,34 @@ export default function LiturgiaScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.title}>Liturgia Diária</Text>
 
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.dateButton} onPress={showDatePicker}>
-            <Text style={styles.buttonText}>Escolher Data</Text>
-          </TouchableOpacity>
+          {Platform.OS === 'web' ? (
+            <input
+              type="date"
+              value={selectedDate.toISOString().split('T')[0]}
+              onChange={(e) => {
+                const novaData = new Date(e.target.value + 'T00:00:00');
+                onDateChange(null, novaData);
+              }}
+              style={{
+                padding: 12,
+                borderRadius: 25,
+                borderWidth: 2,
+                borderColor: '#ffffff',
+                backgroundColor: 'transparent',
+                color: '#ffffff',
+                fontSize: 16,
+                marginVertical: 10
+              }}
+            />
+          ) : (
+            <TouchableOpacity style={styles.dateButton} onPress={showDatePicker}>
+              <Text style={styles.buttonText}>Escolher Data</Text>
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity style={styles.button} onPress={() => showSection('oferendas')}>
             <Text style={styles.buttonText}>Oração do Dia</Text>
@@ -338,7 +359,16 @@ export default function LiturgiaScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: '#000' },
+  container: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  scrollContent: {
+  flexGrow: 1,
+  padding: 20,
+  paddingBottom: 40,
+  alignItems: 'center',
+},
   title: { fontSize: 36, fontWeight: 'bold', marginBottom: 20, color: '#fff', textAlign: 'center' },
   buttonContainer: { marginBottom: 20 },
   button: { backgroundColor: '#00BFFF', paddingVertical: 12, paddingHorizontal: 20, borderRadius: 25, marginVertical: 10, justifyContent: 'center', alignItems: 'center' },
@@ -346,7 +376,13 @@ const styles = StyleSheet.create({
   buttonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
   dataContainer: { marginTop: 20, alignItems: 'center', width: '100%' },
   liturgiaTitle: { fontSize: 24, fontWeight: 'bold', marginBottom: 10, color: '#fff' },
-  liturgiaDetails: { fontSize: 18, marginBottom: 5, textAlign: 'center', color: '#fff' },
+  liturgiaDetails: {
+  fontSize: 18,
+  marginBottom: 8,
+  textAlign: 'left',
+  color: '#fff',
+  lineHeight: 26,
+},
   reflexaoButton: { backgroundColor: '#228B22', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 20, marginTop: 10, alignItems: 'center' },
   subHeaderButtons: { flexDirection: 'row', gap: 10 },
   headerButton: { backgroundColor: '#333', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 5, marginLeft: 10 },
